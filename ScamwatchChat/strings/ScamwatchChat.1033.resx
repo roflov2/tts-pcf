@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ScamwatchChat_Display_Key" xml:space="preserve">
+    <value>Scamwatch SQL assistant</value>
+  </data>
+  <data name="ScamwatchChat_Desc_Key" xml:space="preserve">
+    <value>Chat with a SQL table in plain English. Calls a Text-to-SQL API that writes T-SQL, runs it and explains the result.</value>
+  </data>
+  <data name="boundValue_Display_Key" xml:space="preserve">
+    <value>Bound value</value>
+  </data>
+  <data name="boundValue_Desc_Key" xml:space="preserve">
+    <value>Any text field or value. The control doesn't read or change it; it's only needed to place the control.</value>
+  </data>
+  <data name="apiBaseUrl_Display_Key" xml:space="preserve">
+    <value>API base URL</value>
+  </data>
+  <data name="apiBaseUrl_Desc_Key" xml:space="preserve">
+    <value>Root URL of the Text-to-SQL API, e.g. https://scamwatch-sql-api.example.com</value>
+  </data>
+  <data name="apiScope_Display_Key" xml:space="preserve">
+    <value>API scope</value>
+  </data>
+  <data name="apiScope_Desc_Key" xml:space="preserve">
+    <value>Entra ID scope for the API, e.g. api://&lt;api-app-id&gt;/Query.Run</value>
+  </data>
+  <data name="clientId_Display_Key" xml:space="preserve">
+    <value>Client ID</value>
+  </data>
+  <data name="clientId_Desc_Key" xml:space="preserve">
+    <value>Application (client) ID of the single-page app registration used to sign in.</value>
+  </data>
+  <data name="tenantId_Display_Key" xml:space="preserve">
+    <value>Tenant ID</value>
+  </data>
+  <data name="tenantId_Desc_Key" xml:space="preserve">
+    <value>Directory (tenant) ID. Leave empty to allow any work account.</value>
+  </data>
+  <data name="redirectUri_Display_Key" xml:space="preserve">
+    <value>Redirect URI</value>
+  </data>
+  <data name="redirectUri_Desc_Key" xml:space="preserve">
+    <value>Sign-in redirect URI. Must be on the same origin as the app. Defaults to the page's origin.</value>
+  </data>
+  <data name="useMockApi_Display_Key" xml:space="preserve">
+    <value>Use sample data</value>
+  </data>
+  <data name="useMockApi_Desc_Key" xml:space="preserve">
+    <value>Answer from built-in sample data instead of calling the API. For demos and testing.</value>
+  </data>
+  <data name="title_Display_Key" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="title_Desc_Key" xml:space="preserve">
+    <value>Heading shown at the top of the control.</value>
+  </data>
+  <data name="placeholder_Display_Key" xml:space="preserve">
+    <value>Question placeholder</value>
+  </data>
+  <data name="placeholder_Desc_Key" xml:space="preserve">
+    <value>Hint text in the question box.</value>
+  </data>
+  <data name="exampleQuestions_Display_Key" xml:space="preserve">
+    <value>Example questions</value>
+  </data>
+  <data name="exampleQuestions_Desc_Key" xml:space="preserve">
+    <value>Starter questions, one per line. Shown before the first question.</value>
+  </data>
+  <data name="showTableOverview_Display_Key" xml:space="preserve">
+    <value>Show table overview</value>
+  </data>
+  <data name="showTableOverview_Desc_Key" xml:space="preserve">
+    <value>Show the table's columns, sample rows and data dictionary above the chat.</value>
+  </data>
+  <data name="defaultMaxAttempts_Display_Key" xml:space="preserve">
+    <value>SQL attempts per question</value>
+  </data>
+  <data name="defaultMaxAttempts_Desc_Key" xml:space="preserve">
+    <value>Initial number of times (1-5) the model may rewrite a query that fails. Users can change it in Settings.</value>
+  </data>
+  <data name="allowFollowUps_Display_Key" xml:space="preserve">
+    <value>Allow follow-up questions</value>
+  </data>
+  <data name="allowFollowUps_Desc_Key" xml:space="preserve">
+    <value>Initial setting for sending recent questions and answers with each new question.</value>
+  </data>
+  <data name="historyTurns_Display_Key" xml:space="preserve">
+    <value>Follow-up history turns</value>
+  </data>
+  <data name="historyTurns_Desc_Key" xml:space="preserve">
+    <value>How many earlier question/answer pairs are sent for follow-up questions.</value>
+  </data>
+  <data name="dataDictionary_Display_Key" xml:space="preserve">
+    <value>Data dictionary</value>
+  </data>
+  <data name="dataDictionary_Desc_Key" xml:space="preserve">
+    <value>Plain-text description of the columns, codes and business rules, sent with every question. Users can upload their own instead.</value>
+  </data>
+  <data name="dataDictionaryName_Display_Key" xml:space="preserve">
+    <value>Data dictionary name</value>
+  </data>
+  <data name="dataDictionaryName_Desc_Key" xml:space="preserve">
+    <value>Name shown for the data dictionary set above.</value>
+  </data>
+  <data name="allowDictionaryUpload_Display_Key" xml:space="preserve">
+    <value>Allow dictionary upload</value>
+  </data>
+  <data name="allowDictionaryUpload_Desc_Key" xml:space="preserve">
+    <value>Let users upload their own .txt data dictionary. Turn off to always use the one set above.</value>
+  </data>
+  <data name="lastQuestion_Display_Key" xml:space="preserve">
+    <value>Last question</value>
+  </data>
+  <data name="lastQuestion_Desc_Key" xml:space="preserve">
+    <value>The most recent question asked.</value>
+  </data>
+  <data name="lastAnswer_Display_Key" xml:space="preserve">
+    <value>Last answer</value>
+  </data>
+  <data name="lastAnswer_Desc_Key" xml:space="preserve">
+    <value>The assistant's most recent answer text.</value>
+  </data>
+  <data name="lastSql_Display_Key" xml:space="preserve">
+    <value>Last SQL</value>
+  </data>
+  <data name="lastSql_Desc_Key" xml:space="preserve">
+    <value>The SQL behind the most recent answer.</value>
+  </data>
+  <data name="lastRowCount_Display_Key" xml:space="preserve">
+    <value>Last row count</value>
+  </data>
+  <data name="lastRowCount_Desc_Key" xml:space="preserve">
+    <value>Rows returned for the most recent answer.</value>
+  </data>
+  <data name="lastError_Display_Key" xml:space="preserve">
+    <value>Last error</value>
+  </data>
+  <data name="lastError_Desc_Key" xml:space="preserve">
+    <value>Error from the most recent question, or empty.</value>
+  </data>
+  <data name="activeDictionaryName_Display_Key" xml:space="preserve">
+    <value>Active dictionary name</value>
+  </data>
+  <data name="activeDictionaryName_Desc_Key" xml:space="preserve">
+    <value>Name of the data dictionary sent with new questions, or empty.</value>
+  </data>
+  <data name="ui_Caption" xml:space="preserve">
+    <value>Ask a question in plain English. The assistant writes T-SQL, runs it against {0} in {1}, and explains what it found.</value>
+  </data>
+  <data name="ui_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ui_CloseSettings" xml:space="preserve">
+    <value>Close settings</value>
+  </data>
+  <data name="ui_ClearConversation" xml:space="preserve">
+    <value>Clear conversation</value>
+  </data>
+  <data name="ui_Connecting" xml:space="preserve">
+    <value>Connecting to the assistant and reading the table schema…</value>
+  </data>
+  <data name="ui_ConnectFailed" xml:space="preserve">
+    <value>Couldn't connect to the assistant.</value>
+  </data>
+  <data name="ui_ConnectHelp" xml:space="preserve">
+    <value>Check that you're signed in with an account that can use the assistant, that your network can reach the API, and that the API allows this site. Then try again.</value>
+  </data>
+  <data name="ui_Retry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="ui_SignInTitle" xml:space="preserve">
+    <value>Sign in to use the assistant</value>
+  </data>
+  <data name="ui_SignInBody" xml:space="preserve">
+    <value>The assistant needs your work account to run queries for you.</value>
+  </data>
+  <data name="ui_SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="ui_SignInRedirect" xml:space="preserve">
+    <value>Redirect URI to register for this app: {0}</value>
+  </data>
+  <data name="ui_MockBadge" xml:space="preserve">
+    <value>Mock data</value>
+  </data>
+  <data name="ui_Thinking" xml:space="preserve">
+    <value>Writing and running SQL…</value>
+  </data>
+  <data name="ui_Cancel" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ui_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="ui_ComposerLabel" xml:space="preserve">
+    <value>Your question</value>
+  </data>
+  <data name="ui_ComposerHint" xml:space="preserve">
+    <value>Enter to send, Shift+Enter for a new line</value>
+  </data>
+  <data name="ui_ExamplesIntro" xml:space="preserve">
+    <value>Ask anything about the table, or start with one of these:</value>
+  </data>
+  <data name="ui_ExamplesDictionaryHint" xml:space="preserve">
+    <value>Answers improve when the assistant knows what the columns mean. Upload a data dictionary in Settings, or download the template there to write one.</value>
+  </data>
+  <data name="ui_You" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="ui_Assistant" xml:space="preserve">
+    <value>Assistant</value>
+  </data>
+  <data name="ui_DataNoteSuffix" xml:space="preserve">
+    <value>The full result is in the table below.</value>
+  </data>
+  <data name="ui_TabResults" xml:space="preserve">
+    <value>Results ({0})</value>
+  </data>
+  <data name="ui_TabSql" xml:space="preserve">
+    <value>SQL</value>
+  </data>
+  <data name="ui_TabFailed" xml:space="preserve">
+    <value>Failed attempts ({0})</value>
+  </data>
+  <data name="ui_DownloadCsv" xml:space="preserve">
+    <value>Download CSV</value>
+  </data>
+  <data name="ui_CopyCsv" xml:space="preserve">
+    <value>Copy as CSV</value>
+  </data>
+  <data name="ui_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ui_Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="ui_DownloadBlocked" xml:space="preserve">
+    <value>The download was blocked here. Use Copy as CSV instead.</value>
+  </data>
+  <data name="ui_RowsDropped" xml:space="preserve">
+    <value>This result was too large to keep after the page reloaded. Ask the question again to see it.</value>
+  </data>
+  <data name="ui_NoQuery" xml:space="preserve">
+    <value>(no query)</value>
+  </data>
+  <data name="ui_NoErrorMessage" xml:space="preserve">
+    <value>No error message returned.</value>
+  </data>
+  <data name="ui_WrittenWithDictionary" xml:space="preserve">
+    <value>Written with the data dictionary {0}.</value>
+  </data>
+  <data name="ui_ColumnsIn" xml:space="preserve">
+    <value>Columns in {0} ({1})</value>
+  </data>
+  <data name="ui_Column" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="ui_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="ui_InDictionary" xml:space="preserve">
+    <value>In dictionary</value>
+  </data>
+  <data name="ui_NotInDictionary" xml:space="preserve">
+    <value>Not named in the dictionary: {0}. For these the assistant goes on the column name, type and sample rows alone.</value>
+  </data>
+  <data name="ui_SampleRows" xml:space="preserve">
+    <value>Sample rows</value>
+  </data>
+  <data name="ui_DictionaryViewer" xml:space="preserve">
+    <value>Data dictionary: {0}</value>
+  </data>
+  <data name="ui_DictionaryViewerCaption" xml:space="preserve">
+    <value>This text is sent to the assistant with each question.</value>
+  </data>
+  <data name="ui_DictionaryHeading" xml:space="preserve">
+    <value>Data dictionary</value>
+  </data>
+  <data name="ui_DictionaryCaption" xml:space="preserve">
+    <value>Optional. A .txt file explaining what the columns mean, what codes stand for, and which rows or definitions your team uses. It's sent with every question to steer the SQL.</value>
+  </data>
+  <data name="ui_DictionaryUpload" xml:space="preserve">
+    <value>Upload .txt file</value>
+  </data>
+  <data name="ui_DictionaryReplace" xml:space="preserve">
+    <value>Replace file</value>
+  </data>
+  <data name="ui_DictionaryRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ui_DictionaryReading" xml:space="preserve">
+    <value>Reading {0}…</value>
+  </data>
+  <data name="ui_DictionaryStatus" xml:space="preserve">
+    <value>{0} is used for new questions. Names {1} of {2} columns in {3}.</value>
+  </data>
+  <data name="ui_DictionaryMakerStatus" xml:space="preserve">
+    <value>{0} (set by the app) is used for new questions. Names {1} of {2} columns in {3}.</value>
+  </data>
+  <data name="ui_DictionaryMakerFallback" xml:space="preserve">
+    <value>Remove your file to go back to {0}, which the app provides.</value>
+  </data>
+  <data name="ui_DictionaryTruncated" xml:space="preserve">
+    <value>Only the first {0} characters are sent. Cut the file down to what matters for querying so nothing important is lost.</value>
+  </data>
+  <data name="ui_DictionaryTemplate" xml:space="preserve">
+    <value>Download a template for this table</value>
+  </data>
+  <data name="ui_DictionaryTemplateHelp" xml:space="preserve">
+    <value>A .txt file listing every column, ready for you to add descriptions.</value>
+  </data>
+  <data name="ui_AnsweringHeading" xml:space="preserve">
+    <value>Answering</value>
+  </data>
+  <data name="ui_Attempts" xml:space="preserve">
+    <value>SQL attempts per question: {0}</value>
+  </data>
+  <data name="ui_AttemptsHelp" xml:space="preserve">
+    <value>How many times the model may rewrite a query that fails.</value>
+  </data>
+  <data name="ui_FollowUps" xml:space="preserve">
+    <value>Allow follow-up questions</value>
+  </data>
+  <data name="ui_FollowUpsHelp" xml:space="preserve">
+    <value>Sends your last few questions and answers with each new one, so you can ask things like “now break that down by month”.</value>
+  </data>
+</root>

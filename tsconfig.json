@@ -1,0 +1,14 @@
+{
+  "extends": "./node_modules/pcf-scripts/tsconfig_base.json",
+  "compilerOptions": {
+    "typeRoots": ["node_modules/@types"],
+    "types": ["powerapps-component-framework", "jest"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["ScamwatchChat/**/*.ts", "ScamwatchChat/**/*.tsx", "dev/**/*.ts", "dev/**/*.tsx"],
+  "exclude": ["node_modules", "out"]
+}

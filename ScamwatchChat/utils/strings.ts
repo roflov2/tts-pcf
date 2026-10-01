@@ -1,0 +1,112 @@
+/**
+ * UI text. English defaults live here so the preview page and tests work without
+ * a PCF context; in Power Apps the same keys are read from
+ * strings/ScamwatchChat.1033.resx (a test checks the two stay in sync).
+ * Placeholders are {0}, {1}, …
+ */
+
+import * as React from "react";
+
+export const DEFAULT_STRINGS = {
+  ui_Caption:
+    "Ask a question in plain English. The assistant writes T-SQL, runs it against {0} in {1}, and explains what it found.",
+  ui_Settings: "Settings",
+  ui_CloseSettings: "Close settings",
+  ui_ClearConversation: "Clear conversation",
+  ui_Connecting: "Connecting to the assistant and reading the table schema…",
+  ui_ConnectFailed: "Couldn't connect to the assistant.",
+  ui_ConnectHelp:
+    "Check that you're signed in with an account that can use the assistant, that your network can reach the API, and that the API allows this site. Then try again.",
+  ui_Retry: "Try again",
+  ui_SignInTitle: "Sign in to use the assistant",
+  ui_SignInBody: "The assistant needs your work account to run queries for you.",
+  ui_SignIn: "Sign in",
+  ui_SignInRedirect: "Redirect URI to register for this app: {0}",
+  ui_MockBadge: "Mock data",
+  ui_Thinking: "Writing and running SQL…",
+  ui_Cancel: "Stop",
+  ui_Send: "Send",
+  ui_ComposerLabel: "Your question",
+  ui_ComposerHint: "Enter to send, Shift+Enter for a new line",
+  ui_ExamplesIntro: "Ask anything about the table, or start with one of these:",
+  ui_ExamplesDictionaryHint:
+    "Answers improve when the assistant knows what the columns mean. Upload a data dictionary in Settings, or download the template there to write one.",
+  ui_You: "You",
+  ui_Assistant: "Assistant",
+  ui_DataNoteSuffix: "The full result is in the table below.",
+  ui_TabResults: "Results ({0})",
+  ui_TabSql: "SQL",
+  ui_TabFailed: "Failed attempts ({0})",
+  ui_DownloadCsv: "Download CSV",
+  ui_CopyCsv: "Copy as CSV",
+  ui_Copy: "Copy",
+  ui_Copied: "Copied",
+  ui_DownloadBlocked: "The download was blocked here. Use Copy as CSV instead.",
+  ui_RowsDropped: "This result was too large to keep after the page reloaded. Ask the question again to see it.",
+  ui_NoQuery: "(no query)",
+  ui_NoErrorMessage: "No error message returned.",
+  ui_WrittenWithDictionary: "Written with the data dictionary {0}.",
+  ui_ColumnsIn: "Columns in {0} ({1})",
+  ui_Column: "Column",
+  ui_Type: "Type",
+  ui_InDictionary: "In dictionary",
+  ui_NotInDictionary:
+    "Not named in the dictionary: {0}. For these the assistant goes on the column name, type and sample rows alone.",
+  ui_SampleRows: "Sample rows",
+  ui_DictionaryViewer: "Data dictionary: {0}",
+  ui_DictionaryViewerCaption: "This text is sent to the assistant with each question.",
+  ui_DictionaryHeading: "Data dictionary",
+  ui_DictionaryCaption:
+    "Optional. A .txt file explaining what the columns mean, what codes stand for, and which rows or definitions your team uses. It's sent with every question to steer the SQL.",
+  ui_DictionaryUpload: "Upload .txt file",
+  ui_DictionaryReplace: "Replace file",
+  ui_DictionaryRemove: "Remove",
+  ui_DictionaryReading: "Reading {0}…",
+  ui_DictionaryStatus: "{0} is used for new questions. Names {1} of {2} columns in {3}.",
+  ui_DictionaryMakerStatus: "{0} (set by the app) is used for new questions. Names {1} of {2} columns in {3}.",
+  ui_DictionaryMakerFallback: "Remove your file to go back to {0}, which the app provides.",
+  ui_DictionaryTruncated:
+    "Only the first {0} characters are sent. Cut the file down to what matters for querying so nothing important is lost.",
+  ui_DictionaryTemplate: "Download a template for this table",
+  ui_DictionaryTemplateHelp: "A .txt file listing every column, ready for you to add descriptions.",
+  ui_AnsweringHeading: "Answering",
+  ui_Attempts: "SQL attempts per question: {0}",
+  ui_AttemptsHelp: "How many times the model may rewrite a query that fails.",
+  ui_FollowUps: "Allow follow-up questions",
+  ui_FollowUpsHelp:
+    "Sends your last few questions and answers with each new one, so you can ask things like “now break that down by month”.",
+} as const;
+
+export type StringKey = keyof typeof DEFAULT_STRINGS;
+export type Translate = (key: StringKey, ...args: (string | number)[]) => string;
+
+export function format(template: string, args: (string | number)[]): string {
+  return template.replace(/\{(\d+)\}/g, (match, index: string) => {
+    const value = args[Number(index)];
+    return value === undefined ? match : String(value);
+  });
+}
+
+/** Build a translator. lookup is context.resources.getString inside Power Apps. */
+export function createTranslator(lookup?: (key: string) => string): Translate {
+  return (key, ...args) => {
+    let template: string = DEFAULT_STRINGS[key];
+    if (lookup) {
+      try {
+        const found = lookup(key);
+        if (found && found !== key) {
+          template = found;
+        }
+      } catch {
+        // Fall back to the built-in English text.
+      }
+    }
+    return format(template, args);
+  };
+}
+
+export const StringsContext = React.createContext<Translate>(createTranslator());
+
+export function useStrings(): Translate {
+  return React.useContext(StringsContext);
+}

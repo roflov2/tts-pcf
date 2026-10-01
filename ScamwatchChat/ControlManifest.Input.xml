@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.0.0"
+    display-name-key="ScamwatchChat_Display_Key" description-key="ScamwatchChat_Desc_Key"
+    control-type="virtual">
+
+    <!-- Bound property: field templates need one, and it lets the control sit on a model-driven form.
+         The control never writes to it. -->
+    <property name="boundValue" display-name-key="boundValue_Display_Key" description-key="boundValue_Desc_Key"
+      of-type="SingleLine.Text" usage="bound" required="false" />
+
+    <!-- Backend connection -->
+    <property name="apiBaseUrl" display-name-key="apiBaseUrl_Display_Key" description-key="apiBaseUrl_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="apiScope" display-name-key="apiScope_Display_Key" description-key="apiScope_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="clientId" display-name-key="clientId_Display_Key" description-key="clientId_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="tenantId" display-name-key="tenantId_Display_Key" description-key="tenantId_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="redirectUri" display-name-key="redirectUri_Display_Key" description-key="redirectUri_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="useMockApi" display-name-key="useMockApi_Display_Key" description-key="useMockApi_Desc_Key"
+      of-type="TwoOptions" usage="input" required="false" default-value="false" />
+
+    <!-- Appearance -->
+    <property name="title" display-name-key="title_Display_Key" description-key="title_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" default-value="Scamwatch SQL assistant" />
+    <property name="placeholder" display-name-key="placeholder_Display_Key" description-key="placeholder_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" default-value="Ask about the scam reports…" />
+    <property name="exampleQuestions" display-name-key="exampleQuestions_Display_Key" description-key="exampleQuestions_Desc_Key"
+      of-type="Multiple" usage="input" required="false" />
+    <property name="showTableOverview" display-name-key="showTableOverview_Display_Key" description-key="showTableOverview_Desc_Key"
+      of-type="TwoOptions" usage="input" required="false" default-value="true" />
+
+    <!-- Answering -->
+    <property name="defaultMaxAttempts" display-name-key="defaultMaxAttempts_Display_Key" description-key="defaultMaxAttempts_Desc_Key"
+      of-type="Whole.None" usage="input" required="false" default-value="3" />
+    <property name="allowFollowUps" display-name-key="allowFollowUps_Display_Key" description-key="allowFollowUps_Desc_Key"
+      of-type="TwoOptions" usage="input" required="false" default-value="true" />
+    <property name="historyTurns" display-name-key="historyTurns_Display_Key" description-key="historyTurns_Desc_Key"
+      of-type="Whole.None" usage="input" required="false" default-value="3" />
+
+    <!-- Data dictionary -->
+    <property name="dataDictionary" display-name-key="dataDictionary_Display_Key" description-key="dataDictionary_Desc_Key"
+      of-type="Multiple" usage="input" required="false" />
+    <property name="dataDictionaryName" display-name-key="dataDictionaryName_Display_Key" description-key="dataDictionaryName_Desc_Key"
+      of-type="SingleLine.Text" usage="input" required="false" default-value="Team dictionary" />
+    <property name="allowDictionaryUpload" display-name-key="allowDictionaryUpload_Display_Key" description-key="allowDictionaryUpload_Desc_Key"
+      of-type="TwoOptions" usage="input" required="false" default-value="true" />
+
+    <!-- Outputs, raised through notifyOutputChanged after every answer -->
+    <property name="lastQuestion" display-name-key="lastQuestion_Display_Key" description-key="lastQuestion_Desc_Key"
+      of-type="Multiple" usage="output" />
+    <property name="lastAnswer" display-name-key="lastAnswer_Display_Key" description-key="lastAnswer_Desc_Key"
+      of-type="Multiple" usage="output" />
+    <property name="lastSql" display-name-key="lastSql_Display_Key" description-key="lastSql_Desc_Key"
+      of-type="Multiple" usage="output" />
+    <property name="lastRowCount" display-name-key="lastRowCount_Display_Key" description-key="lastRowCount_Desc_Key"
+      of-type="Whole.None" usage="output" />
+    <property name="lastError" display-name-key="lastError_Display_Key" description-key="lastError_Desc_Key"
+      of-type="Multiple" usage="output" />
+    <property name="activeDictionaryName" display-name-key="activeDictionaryName_Display_Key" description-key="activeDictionaryName_Desc_Key"
+      of-type="SingleLine.Text" usage="output" />
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/ScamwatchChat.css" order="1" />
+      <resx path="strings/ScamwatchChat.1033.resx" version="1.0.0" />
+      <platform-library name="React" version="16.14.0" />
+      <platform-library name="Fluent" version="9.46.2" />
+    </resources>
+
+    <!-- The control calls your backend directly, which makes the hosting app premium.
+         Replace the domain with your API's host before building for production. -->
+    <external-service-usage enabled="true">
+      <domain>scamwatch-sql-api.example.com</domain>
+    </external-service-usage>
+  </control>
+</manifest>

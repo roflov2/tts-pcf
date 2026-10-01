@@ -1,0 +1,28 @@
+{
+  "name": "ScamwatchChat PCF",
+  "build": { "dockerfile": "Dockerfile" },
+  // Bazzite ships Podman: keep file ownership the same inside and outside the container.
+  "runArgs": ["--userns=keep-id"],
+  "containerUser": "node",
+  "updateRemoteUserUID": true,
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,Z",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [8181, 8182, 5173],
+  "portsAttributes": {
+    "8181": { "label": "PCF test harness", "onAutoForward": "openBrowser" },
+    "8182": { "label": "Harness live reload", "onAutoForward": "silent" },
+    "5173": { "label": "Mock preview", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm ci && npx playwright install --with-deps chromium",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Orta.vscode-jest",
+        "redhat.vscode-xml",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}

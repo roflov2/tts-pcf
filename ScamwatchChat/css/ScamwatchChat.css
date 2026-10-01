@@ -1,0 +1,7 @@
+/* Most styling lives in Fluent UI makeStyles inside the components.
+   These rules only let the control fill the space the host gives it. */
+.Scamwatch\.ScamwatchChat,
+[data-id*="ScamwatchChat"] {
+  height: 100%;
+  width: 100%;
+}

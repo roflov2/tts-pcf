@@ -1,0 +1,24 @@
+Data dictionary for Reporting.ScamWatchReportFiltered
+
+This is a sample for trying the control with the mock API. Upload it from
+Settings > Data dictionary. It names 6 of the mock table's 9 columns.
+
+== About the table ==
+One row represents: one scam report made to Scamwatch.
+Rows to leave out unless someone asks for them: reports marked as withdrawn.
+
+== Columns ==
+report_id (int): unique id of the report.
+date_reported (date): the day the report was submitted, not the day the scam happened.
+scam_type (nvarchar): the reporter's choice of scam category, e.g. Phishing, Investment, Romance.
+amount_lost (decimal): Australian dollars lost. 0 when nothing was lost; never NULL.
+is_loss (bit): 1 when amount_lost > 0.
+other_product_name (nvarchar): free text naming the product or service involved. Often blank.
+
+== Terms ==
+"A loss report" is one where is_loss = 1.
+"This year" means the calendar year of date_reported.
+
+== Example questions and the SQL that answers them ==
+Q: How much was lost to investment scams?
+SQL: SELECT SUM(amount_lost) FROM Reporting.ScamWatchReportFiltered WHERE scam_type = 'Investment'

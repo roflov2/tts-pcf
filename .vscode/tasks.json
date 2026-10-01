@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start harness",
+      "detail": "PCF test harness at http://localhost:8181 (set useMockApi = True)",
+      "type": "npm",
+      "script": "start:watch",
+      "isBackground": true,
+      "problemMatcher": { "pattern": { "regexp": "^$" }, "background": { "activelyBeginsPattern": "build", "activelyEndsPattern": "Watching files" } }
+    },
+    {
+      "label": "Preview",
+      "detail": "Mock-data preview at http://localhost:5173",
+      "type": "npm",
+      "script": "preview",
+      "isBackground": true,
+      "problemMatcher": { "pattern": { "regexp": "^$" }, "background": { "activelyBeginsPattern": "VITE", "activelyEndsPattern": "Local:" } }
+    },
+    { "label": "Test", "type": "npm", "script": "test", "group": { "kind": "test", "isDefault": true }, "problemMatcher": [] },
+    { "label": "Lint", "type": "npm", "script": "lint", "problemMatcher": ["$eslint-stylish"] },
+    { "label": "Build", "type": "npm", "script": "build", "group": { "kind": "build", "isDefault": true }, "problemMatcher": ["$tsc"] },
+    { "label": "Build solution", "detail": "Solution/bin/Release/*.zip", "type": "npm", "script": "solution", "problemMatcher": [] },
+    { "label": "Screenshots", "detail": "docs/screenshot*.png", "type": "npm", "script": "screenshot", "problemMatcher": [] }
+  ]
+}
