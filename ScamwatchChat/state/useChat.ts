@@ -12,6 +12,7 @@ import type {
   AssistantChatMessage,
   ChatApi,
   ChatMessage,
+  ConnectionSettings,
   ControlOutputs,
   DataDictionary,
   QueryResponse,
@@ -160,12 +161,14 @@ export interface UseChatOptions {
   maker: MakerDictionary;
   allowUpload: boolean;
   maxDictionaryChars?: number;
+  /** The user's Connection form values, sent with each question when set. */
+  connection?: ConnectionSettings | null;
   onOutputs?: (outputs: ControlOutputs) => void;
   onSignInRequired?: () => void;
 }
 
 export function useChat(options: UseChatOptions) {
-  const { api, storageNamespace, historyTurns, initialSettings, maker, allowUpload, maxDictionaryChars } = options;
+  const { api, storageNamespace, historyTurns, initialSettings, maker, allowUpload, maxDictionaryChars, connection } = options;
   const { onOutputs, onSignInRequired } = options;
 
   const [state, dispatch] = React.useReducer(chatReducer, undefined, () => {
@@ -191,8 +194,8 @@ export function useChat(options: UseChatOptions) {
 
   const controller = React.useRef<AbortController | null>(null);
   // The latest state and props, read inside async callbacks.
-  const latest = React.useRef({ state, dictionary, historyTurns, api });
-  latest.current = { state, dictionary, historyTurns, api };
+  const latest = React.useRef({ state, dictionary, historyTurns, api, connection });
+  latest.current = { state, dictionary, historyTurns, api, connection };
 
   React.useEffect(() => {
     if (!state.pending) {
@@ -238,6 +241,7 @@ export function useChat(options: UseChatOptions) {
             maxAttempts: settings.maxAttempts,
             maxPreviewRows: settings.maxPreviewRows,
             ...(activeDict ? { dataDictionary: activeDict.text } : {}),
+            ...(current.connection ? { connection: current.connection } : {}),
           },
           abort.signal,
         );

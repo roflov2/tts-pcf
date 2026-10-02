@@ -22,6 +22,7 @@ function renderApp(overrides: Partial<ChatAppProps> = {}) {
     allowFollowUps: true,
     historyTurns: 3,
     allowDictionaryUpload: true,
+    allowConnectionChange: false,
     storageNamespace: `test-${Math.random()}`,
     isMock: true,
     ...overrides,
@@ -204,6 +205,8 @@ describe("ChatApp with the mock API", () => {
     expect(within(drawer).getByText("sqlserver.example.com")).toBeInTheDocument();
     expect(within(drawer).getByText("Reporting.ScamWatchReportFiltered")).toBeInTheDocument();
     expect(within(drawer).getByText("gpt-4o")).toBeInTheDocument();
+    expect(within(drawer).getByText("Azure OpenAI endpoint")).toBeInTheDocument();
+    expect(within(drawer).getByText("2024-12-01-preview")).toBeInTheDocument();
 
     const rows = within(drawer).getByLabelText("Rows the model reads per result");
     expect(rows).toHaveValue("20");
@@ -221,6 +224,42 @@ describe("ChatApp with the mock API", () => {
     await waitFor(() => expect(getSchema).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(reconnect).not.toBeDisabled());
     expect(screen.getByText(/reports in the table/)).toBeInTheDocument();
+  });
+
+  it("lets users change the connection like app.py's Connection form when the app allows it", async () => {
+    const api = new MockChatApi(0);
+    const query = jest.spyOn(api, "query");
+    renderApp({ api, allowConnectionChange: true });
+    await screen.findByText(/runs it against/);
+    fireEvent.click(screen.getByLabelText("Settings"));
+    const drawer = await screen.findByRole("dialog", { hidden: true });
+
+    // All six fields, filled in from what the API reports.
+    expect(within(drawer).getByLabelText("SQL server")).toHaveValue("sqlserver.example.com");
+    expect(within(drawer).getByLabelText("Azure OpenAI endpoint")).toHaveValue("https://openai.example.com/");
+    expect(within(drawer).getByLabelText("API version")).toHaveValue("2024-12-01-preview");
+
+    // A table the API can't read: app.py's error, naming the table and server, with a checklist.
+    fireEvent.change(within(drawer).getByLabelText("Table"), { target: { value: " dbo.Missing " } });
+    fireEvent.click(within(drawer).getByText("Connect"));
+    expect(await screen.findByText("Couldn't connect to dbo.Missing on sqlserver.example.com.")).toBeInTheDocument();
+    expect(screen.getByText("To fix this, check that:")).toBeInTheDocument();
+    expect(screen.getByText(/update the connection in Settings if needed and select Connect/)).toBeInTheDocument();
+
+    fireEvent.click(within(drawer).getByText("Use the app's settings"));
+    await screen.findByText(/runs it against Reporting\.ScamWatchReportFiltered/);
+
+    fireEvent.change(within(drawer).getByLabelText("Model deployment"), { target: { value: "gpt-4o-mini" } });
+    fireEvent.click(within(drawer).getByText("Connect"));
+    await waitFor(() => expect(within(drawer).getByText("Use the app's settings")).toBeInTheDocument());
+    const box = screen.getByLabelText("Your question");
+    await waitFor(() => expect(box).not.toBeDisabled());
+    fireEvent.change(box, { target: { value: "How many reports?" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    await screen.findByText(/reports in the table/);
+    expect((query.mock.calls[0][0] as QueryRequest).connection).toEqual(
+      expect.objectContaining({ model: "gpt-4o-mini", table: "Reporting.ScamWatchReportFiltered" }),
+    );
   });
 
   it("renders questions as markdown and searches and expands results like st.dataframe", async () => {
@@ -242,7 +281,7 @@ describe("ChatApp with the mock API", () => {
 
     fireEvent.click(screen.getByLabelText("Full screen"));
     const dialog = await screen.findByRole("dialog", { hidden: true });
-    expect(dialog.querySelector('[role="table"][aria-label="Results (1 row)"]')).not.toBeNull();
+    expect(dialog.querySelector('[role="grid"][aria-label="Results (1 row)"]')).not.toBeNull();
   });
 
   it("keeps the user's answering settings when the control is shown again", async () => {

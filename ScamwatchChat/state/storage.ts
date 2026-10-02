@@ -6,7 +6,8 @@
  * work without it.
  */
 
-import type { AnswerSettings, AssistantChatMessage, ChatMessage, DataDictionary } from "../types";
+import type { AnswerSettings, AssistantChatMessage, ChatMessage, ConnectionSettings, DataDictionary } from "../types";
+import { normalizeConnection } from "../utils/connection";
 
 /** Result rows bigger than this aren't kept; the message says to ask again. */
 export const MAX_STORED_RESULT_CHARS = 2_000_000;
@@ -37,6 +38,7 @@ export function storageKeys(namespace: string) {
     messages: `scamwatch-chat:${namespace}:messages`,
     dictionary: `scamwatch-chat:${namespace}:dictionary`,
     settings: `scamwatch-chat:${namespace}:settings`,
+    connection: `scamwatch-chat:${namespace}:connection`,
   };
 }
 
@@ -83,4 +85,13 @@ export function loadSettings(namespace: string): Partial<AnswerSettings> {
 
 export function saveSettings(namespace: string, settings: AnswerSettings): void {
   write(storageKeys(namespace).settings, settings);
+}
+
+/** The Connection form values the user connected with this session, or null for the app's settings. */
+export function loadConnection(namespace: string): ConnectionSettings | null {
+  return normalizeConnection(read<Record<string, unknown>>(storageKeys(namespace).connection));
+}
+
+export function saveConnection(namespace: string, connection: ConnectionSettings | null): void {
+  write(storageKeys(namespace).connection, connection);
 }

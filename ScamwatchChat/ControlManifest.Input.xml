@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.1.0"
+  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.2.0"
     display-name-key="ScamwatchChat_Display_Key" description-key="ScamwatchChat_Desc_Key"
     control-type="virtual">
 
@@ -21,6 +21,9 @@
     <property name="redirectUri" display-name-key="redirectUri_Display_Key" description-key="redirectUri_Desc_Key"
       of-type="SingleLine.Text" usage="input" required="false" />
     <property name="useMockApi" display-name-key="useMockApi_Display_Key" description-key="useMockApi_Desc_Key"
+      of-type="TwoOptions" usage="input" required="false" default-value="false" />
+    <!-- Off by default: the API runs SQL under its own identity, so it must allowlist what users pick. -->
+    <property name="allowConnectionChange" display-name-key="allowConnectionChange_Display_Key" description-key="allowConnectionChange_Desc_Key"
       of-type="TwoOptions" usage="input" required="false" default-value="false" />
 
     <!-- Appearance -->

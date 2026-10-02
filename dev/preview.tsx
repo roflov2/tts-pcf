@@ -2,7 +2,7 @@
  * Preview page for the control, backed by the mock API. Use the toolbar to try
  * the property combinations a maker can set, and watch the outputs the hosting
  * app would receive. URL parameters set the starting state, for screenshots:
- *   ?width=narrow  ?theme=dark  ?dictionary=maker  ?uploads=off  ?ask=How%20many%20reports
+ *   ?width=narrow  ?theme=dark  ?dictionary=maker  ?uploads=off  ?connection=edit  ?ask=How%20many%20reports
  */
 
 import * as React from "react";
@@ -34,6 +34,7 @@ function Preview() {
   const [dark, setDark] = React.useState(params.get("theme") === "dark");
   const [maker, setMaker] = React.useState(params.get("dictionary") === "maker");
   const [uploads, setUploads] = React.useState(params.get("uploads") !== "off");
+  const [editConnection, setEditConnection] = React.useState(params.get("connection") === "edit");
   const [outputs, setOutputs] = React.useState<ControlOutputs>({});
   const api = React.useMemo(() => new MockChatApi(), []);
   const onOutputs = React.useCallback((next: ControlOutputs) => setOutputs((o) => ({ ...o, ...next })), []);
@@ -74,6 +75,7 @@ function Preview() {
         <label><input type="checkbox" checked={dark} onChange={(e) => setDark(e.target.checked)} /> Dark theme</label>
         <label><input type="checkbox" checked={maker} onChange={(e) => setMaker(e.target.checked)} /> Maker dictionary</label>
         <label><input type="checkbox" checked={uploads} onChange={(e) => setUploads(e.target.checked)} /> Allow upload</label>
+        <label><input type="checkbox" checked={editConnection} onChange={(e) => setEditConnection(e.target.checked)} /> Allow connection change</label>
         <span style={{ opacity: 0.8 }}>
           Try: “show everything”, “delete old rows”, “now by month”, “cause an error”
         </span>
@@ -101,6 +103,7 @@ function Preview() {
             makerDictionary={maker ? MAKER_DICTIONARY : null}
             makerDictionaryName="Team dictionary"
             allowDictionaryUpload={uploads}
+            allowConnectionChange={editConnection}
             storageNamespace="preview"
             isMock
             theme={dark ? webDarkTheme : webLightTheme}

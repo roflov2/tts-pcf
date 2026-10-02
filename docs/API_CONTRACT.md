@@ -20,6 +20,8 @@ table, the sample rows and the data dictionary template.
   "database": "NASC_ODS",
   "server": "sqlserver.example.com",
   "model": "gpt-4o",
+  "openAiEndpoint": "https://openai.example.com/",
+  "openAiApiVersion": "2024-12-01-preview",
   "columns": [{ "name": "report_id", "type": "int" }],
   "sampleRows": [{ "report_id": 100000, "state": "NSW" }],
   "limits": { "maxDictionaryChars": 40000, "maxResultRows": 50000 }
@@ -31,13 +33,43 @@ table, the sample rows and the data dictionary template.
 | `table`, `database` | `agent.table_name`, `agent.database_name` |
 | `server` | `agent.server_name`; optional, shown in Settings → Connection when present |
 | `model` | `agent.deployment_name`; optional, shown in Settings → Connection when present |
+| `openAiEndpoint`, `openAiApiVersion` | the Azure OpenAI client's endpoint and API version; optional, shown in Settings → Connection when present |
 | `columns` | `agent.columns` (list of `(name, data_type)`) |
 | `sampleRows` | `agent.sample_rows`, made JSON-safe |
 | `limits.maxDictionaryChars` | `MAX_DICTIONARY_CHARS`; optional, the control assumes 40,000 |
 | `limits.maxResultRows` | `agent.max_result_rows`; optional |
 
 If the schema can't be read (`agent.schema_error`), return a 5xx with
-`{"detail": "<message>"}`. The control shows the message and a **Try again** button.
+`{"detail": "<message>"}`. The control shows the message, a checklist and a
+**Try again** button.
+
+## Connection values from users (optional)
+
+`app.py` let each user edit the connection (server, database, table, Azure
+OpenAI endpoint, API version, model deployment) and select **Connect**. That was
+safe there because Streamlit ran under the user's own `az login`. Your API runs
+SQL under its own identity, so the control only sends these values when the app
+maker turns on the `allowConnectionChange` property.
+
+When it's on and the user has connected with their own values, the control sends them:
+
+- on `GET /schema` as query parameters:
+  `/schema?server=…&database=…&table=…&openAiEndpoint=…&openAiApiVersion=…&model=…`
+- on `POST /query` as a `connection` object with the same fields.
+
+Fields the user left blank are left out: use your own setting for those. The
+values are already trimmed, as `app.py` stripped them.
+
+The API must:
+
+- **check every value against an allowlist** of servers, databases, tables,
+  endpoints, API versions and deployments it's willing to use, and return
+  `403` with `{"detail": "…"}` for anything else. Never connect to a value just
+  because a request named it. If you don't support user connections, ignore
+  these fields or return `403`, and leave `allowConnectionChange` off.
+- build one agent per distinct connection and reuse it, as `build_agent` did with
+  `st.cache_resource`.
+- return the connection actually used in the `/schema` response fields above.
 
 ## `POST /query`
 
@@ -50,7 +82,8 @@ If the schema can't be read (`agent.schema_error`), return a 5xx with
   ],
   "maxAttempts": 3,
   "maxPreviewRows": 20,
-  "dataDictionary": "Data dictionary for …"
+  "dataDictionary": "Data dictionary for …",
+  "connection": { "table": "Reporting.ScamWatchReportFiltered", "model": "gpt-4o" }
 }
 ```
 
@@ -60,7 +93,8 @@ through: `agent.query(question, max_attempts=maxAttempts, max_preview_rows=maxPr
 data_dictionary=dataDictionary)`. `maxPreviewRows` is 5–200 (the range of the
 Streamlit app's "Rows the model reads per result" input) and plays the part of
 the agent's `llm_preview_limit`, per question rather than per agent. `dataDictionary` is omitted when none is
-active. It is already tidied and capped by the control, and running
+active, and `connection` is omitted unless the user connected with their own
+values (see above). It is already tidied and capped by the control, and running
 `prepare_data_dictionary` again on the server is safe.
 
 Response, shaped like `ask_agent()`:
@@ -88,7 +122,7 @@ Response, shaped like `ask_agent()`:
 | `columnNames` | `column_names` |
 | `rows` | `full_results` (null when no query succeeded) |
 | `totalRows`, `truncated` | `total_rows`, `truncated` |
-| `error` | set when the agent raised: return HTTP 200 with `error` set, so the chat carries on (as `ask_agent` did) |
+| `error` | set when the agent raised: return HTTP 200 with `error` set, so the chat carries on (as `ask_agent` did). Leave it null when `agent.query()` returns its own `"error": "Max attempts reached"`: `ask_agent` ignored that key, and the answer ("I couldn't complete the query after multiple attempts.") and the Failed attempts tab already explain it |
 
 Values must be JSON-safe, as `_arrow_safe()` did for Streamlit: `Decimal` →
 number, `bytes` → hex string, `date`/`datetime`/`time` → ISO string, UUID and

@@ -59,6 +59,7 @@ export class ScamwatchChat implements ComponentFramework.ReactControl<IInputs, I
       makerDictionary: p.dataDictionary?.raw ?? null,
       makerDictionaryName: text(p.dataDictionaryName?.raw) || null,
       allowDictionaryUpload: p.allowDictionaryUpload?.raw !== false,
+      allowConnectionChange: p.allowConnectionChange?.raw === true,
       storageNamespace: `${useMock ? "mock" : apiBaseUrl}|${text(p.title?.raw)}`,
       isMock: useMock,
       height: allocatedHeight > 0 ? allocatedHeight : undefined,
