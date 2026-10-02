@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.0.0"
+  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.0.1"
     display-name-key="ScamwatchChat_Display_Key" description-key="ScamwatchChat_Desc_Key"
     control-type="virtual">
 
@@ -36,6 +36,8 @@
     <!-- Answering -->
     <property name="defaultMaxAttempts" display-name-key="defaultMaxAttempts_Display_Key" description-key="defaultMaxAttempts_Desc_Key"
       of-type="Whole.None" usage="input" required="false" default-value="3" />
+    <property name="defaultPreviewRows" display-name-key="defaultPreviewRows_Display_Key" description-key="defaultPreviewRows_Desc_Key"
+      of-type="Whole.None" usage="input" required="false" default-value="20" />
     <property name="allowFollowUps" display-name-key="allowFollowUps_Display_Key" description-key="allowFollowUps_Desc_Key"
       of-type="TwoOptions" usage="input" required="false" default-value="true" />
     <property name="historyTurns" display-name-key="historyTurns_Display_Key" description-key="historyTurns_Desc_Key"

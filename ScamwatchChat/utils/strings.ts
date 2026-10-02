@@ -72,6 +72,8 @@ export const DEFAULT_STRINGS = {
   ui_AnsweringHeading: "Answering",
   ui_Attempts: "SQL attempts per question: {0}",
   ui_AttemptsHelp: "How many times the model may rewrite a query that fails.",
+  ui_PreviewRows: "Records shown to the model: {0}",
+  ui_PreviewRowsHelp: "How many query result rows the model reads to write its interpretation.",
   ui_FollowUps: "Allow follow-up questions",
   ui_FollowUpsHelp:
     "Sends your last few questions and answers with each new one, so you can ask things like “now break that down by month”.",

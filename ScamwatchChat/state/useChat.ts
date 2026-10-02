@@ -22,6 +22,8 @@ import { loadDictionary, loadMessages, saveDictionary, saveMessages } from "./st
 
 export const MIN_ATTEMPTS = 1;
 export const MAX_ATTEMPTS = 5;
+export { DEFAULT_PREVIEW_ROWS, MAX_PREVIEW_ROWS, MIN_PREVIEW_ROWS, PREVIEW_ROWS_STEP } from "../defaults";
+import { DEFAULT_PREVIEW_ROWS, MAX_PREVIEW_ROWS, MIN_PREVIEW_ROWS } from "../defaults";
 
 export interface ChatState {
   messages: ChatMessage[];
@@ -45,6 +47,13 @@ export function clampAttempts(value: number | null | undefined): number {
   return Math.min(MAX_ATTEMPTS, Math.max(MIN_ATTEMPTS, Math.round(value)));
 }
 
+export function clampPreviewRows(value: number | null | undefined): number {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return DEFAULT_PREVIEW_ROWS;
+  }
+  return Math.min(MAX_PREVIEW_ROWS, Math.max(MIN_PREVIEW_ROWS, Math.round(value)));
+}
+
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case "ask":
@@ -64,6 +73,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           ...state.settings,
           ...action.settings,
           maxAttempts: clampAttempts(action.settings.maxAttempts ?? state.settings.maxAttempts),
+          maxPreviewRows: clampPreviewRows(action.settings.maxPreviewRows ?? state.settings.maxPreviewRows),
         },
       };
     case "upload":
@@ -161,7 +171,11 @@ export function useChat(options: UseChatOptions) {
   const [state, dispatch] = React.useReducer(chatReducer, undefined, () => ({
     messages: loadMessages(storageNamespace),
     pending: false,
-    settings: { ...initialSettings, maxAttempts: clampAttempts(initialSettings.maxAttempts) },
+    settings: {
+      ...initialSettings,
+      maxAttempts: clampAttempts(initialSettings.maxAttempts),
+      maxPreviewRows: clampPreviewRows(initialSettings.maxPreviewRows),
+    },
     uploaded: loadDictionary(storageNamespace),
   }));
 
@@ -210,6 +224,7 @@ export function useChat(options: UseChatOptions) {
             question: trimmed,
             history,
             maxAttempts: settings.maxAttempts,
+            maxPreviewRows: settings.maxPreviewRows,
             ...(activeDict ? { dataDictionary: activeDict.text } : {}),
           },
           abort.signal,

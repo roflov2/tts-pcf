@@ -10,3 +10,7 @@ export const DEFAULT_EXAMPLE_QUESTIONS = [
 export const DEFAULT_TITLE = "Scamwatch SQL assistant";
 export const DEFAULT_PLACEHOLDER = "Ask about the scam reports…";
 export const DEFAULT_MAKER_DICTIONARY_NAME = "Team dictionary";
+export const DEFAULT_PREVIEW_ROWS = 20;
+export const MIN_PREVIEW_ROWS = 10;
+export const MAX_PREVIEW_ROWS = 100;
+export const PREVIEW_ROWS_STEP = 5;

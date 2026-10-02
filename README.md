@@ -118,6 +118,7 @@ Inputs:
 | `exampleQuestions` | Multiline | the 3 Streamlit examples | One per line |
 | `showTableOverview` | Yes/No | Yes | Columns, sample rows, dictionary viewer |
 | `defaultMaxAttempts` | Number | 3 | 1–5; users can change it in Settings |
+| `defaultPreviewRows` | Number | 20 | 10–100; users can change it in Settings |
 | `allowFollowUps` | Yes/No | Yes | Initial value of the follow-ups switch |
 | `historyTurns` | Number | 3 | Question/answer pairs sent for follow-ups |
 | `dataDictionary` | Multiline | | Team dictionary, e.g. from a Dataverse or SharePoint text column. A user's upload overrides it |

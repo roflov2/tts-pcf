@@ -39,6 +39,8 @@ export interface QueryRequest {
   history: HistoryMessage[];
   /** 1–5. Model rounds allowed before giving up. */
   maxAttempts: number;
+  /** 10–100. How many query result rows the model reads for interpretation. Default 20. */
+  maxPreviewRows?: number;
   /** Plain-text data dictionary, sent with every question when one is active. */
   dataDictionary?: string;
 }
@@ -94,6 +96,7 @@ export type ChatMessage = UserChatMessage | AssistantChatMessage;
 
 export interface AnswerSettings {
   maxAttempts: number;
+  maxPreviewRows: number;
   useHistory: boolean;
 }
 

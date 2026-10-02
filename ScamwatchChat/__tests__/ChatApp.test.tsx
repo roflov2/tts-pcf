@@ -18,6 +18,7 @@ function renderApp(overrides: Partial<ChatAppProps> = {}) {
     exampleQuestions: DEFAULT_EXAMPLE_QUESTIONS,
     showTableOverview: true,
     defaultMaxAttempts: 3,
+    defaultPreviewRows: 20,
     allowFollowUps: true,
     historyTurns: 3,
     allowDictionaryUpload: true,
@@ -147,6 +148,14 @@ describe("ChatApp with the mock API", () => {
     expect(screen.getByText(/Redirect URI to register for this app: https:\/\/apps\.powerapps\.com/)).toBeInTheDocument();
     fireEvent.click(button);
     await waitFor(() => expect(signIn).toHaveBeenCalled());
+  });
+
+  it("adjusts the records shown to the model in settings", async () => {
+    renderApp();
+    await screen.findByText(/runs it against/);
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    const drawer = await screen.findByRole("dialog");
+    expect(within(drawer).getByText("Records shown to the model: 20")).toBeInTheDocument();
   });
 
   it("uploads a dictionary from the settings drawer", async () => {

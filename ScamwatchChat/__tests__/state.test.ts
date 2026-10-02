@@ -3,14 +3,14 @@ import { join } from "node:path";
 import { sortRows } from "../components/ResultsGrid";
 import { ApiError } from "../services/apiClient";
 import { compactForStorage, MAX_STORED_RESULT_CHARS } from "../state/storage";
-import { activeDictionary, chatReducer, type ChatState, clampAttempts, errorMessage, toAssistantMessage } from "../state/useChat";
+import { activeDictionary, chatReducer, type ChatState, clampAttempts, clampPreviewRows, errorMessage, toAssistantMessage } from "../state/useChat";
 import type { AssistantChatMessage, DataDictionary } from "../types";
 import { DEFAULT_STRINGS } from "../utils/strings";
 
 const initial: ChatState = {
   messages: [],
   pending: false,
-  settings: { maxAttempts: 3, useHistory: true },
+  settings: { maxAttempts: 3, maxPreviewRows: 20, useHistory: true },
   uploaded: null,
 };
 
@@ -42,10 +42,17 @@ describe("chatReducer", () => {
     expect(chatReducer(initial, { type: "settings", settings: { maxAttempts: 9 } }).settings.maxAttempts).toBe(5);
     expect(chatReducer(initial, { type: "settings", settings: { useHistory: false } }).settings).toEqual({
       maxAttempts: 3,
+      maxPreviewRows: 20,
       useHistory: false,
     });
     expect(clampAttempts(0)).toBe(1);
     expect(clampAttempts(null)).toBe(3);
+
+    expect(chatReducer(initial, { type: "settings", settings: { maxPreviewRows: 150 } }).settings.maxPreviewRows).toBe(100);
+    expect(chatReducer(initial, { type: "settings", settings: { maxPreviewRows: 5 } }).settings.maxPreviewRows).toBe(10);
+    expect(clampPreviewRows(0)).toBe(10);
+    expect(clampPreviewRows(null)).toBe(20);
+    expect(clampPreviewRows(50)).toBe(50);
   });
 });
 

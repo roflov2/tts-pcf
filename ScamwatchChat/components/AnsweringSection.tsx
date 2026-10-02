@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Button, Caption1, Label, makeStyles, Slider, Subtitle2, Switch, tokens, useId } from "@fluentui/react-components";
 import { Delete16Regular } from "./icons";
-import { MAX_ATTEMPTS, MIN_ATTEMPTS } from "../state/useChat";
+import { MAX_ATTEMPTS, MIN_ATTEMPTS, MAX_PREVIEW_ROWS, MIN_PREVIEW_ROWS, PREVIEW_ROWS_STEP } from "../state/useChat";
 import type { AnswerSettings } from "../types";
 import { useStrings } from "../utils/strings";
 
@@ -25,6 +25,7 @@ export function AnsweringSection({ settings, canClear, onChange, onClear }: Answ
   const t = useStrings();
   const headingId = useId("scw-answering");
   const sliderId = useId("scw-attempts");
+  const recordsSliderId = useId("scw-records");
   return (
     <section className={styles.root} aria-labelledby={headingId}>
       <Subtitle2 id={headingId}>{t("ui_AnsweringHeading")}</Subtitle2>
@@ -39,6 +40,18 @@ export function AnsweringSection({ settings, canClear, onChange, onClear }: Answ
           onChange={(_, data) => onChange({ maxAttempts: data.value })}
         />
         <Caption1 className={styles.note}>{t("ui_AttemptsHelp")}</Caption1>
+      </div>
+      <div className={styles.field}>
+        <Label htmlFor={recordsSliderId}>{t("ui_PreviewRows", settings.maxPreviewRows)}</Label>
+        <Slider
+          id={recordsSliderId}
+          min={MIN_PREVIEW_ROWS}
+          max={MAX_PREVIEW_ROWS}
+          step={PREVIEW_ROWS_STEP}
+          value={settings.maxPreviewRows}
+          onChange={(_, data) => onChange({ maxPreviewRows: data.value })}
+        />
+        <Caption1 className={styles.note}>{t("ui_PreviewRowsHelp")}</Caption1>
       </div>
       <div className={styles.field}>
         <Switch

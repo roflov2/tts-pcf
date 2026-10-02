@@ -106,13 +106,14 @@ function result(
   sql: string,
   columnNames: string[],
   rows: Row[],
-  options: { truncated?: boolean; attempts?: Attempt[] } = {},
+  options: { truncated?: boolean; attempts?: Attempt[]; previewLimit?: number } = {},
 ): QueryResponse {
   const truncated = options.truncated ?? false;
+  const previewLimit = options.previewLimit ?? PREVIEW_LIMIT;
   const totalRows = rows.length;
   const notes: string[] = [];
-  if (totalRows > PREVIEW_LIMIT) {
-    notes.push(`Interpretation based on the first ${PREVIEW_LIMIT} of ${totalRows.toLocaleString("en-US")} rows.`);
+  if (totalRows > previewLimit) {
+    notes.push(`Interpretation based on the first ${previewLimit} of ${totalRows.toLocaleString("en-US")} rows.`);
   }
   if (truncated) {
     notes.push(`Results were capped at ${MAX_RESULT_ROWS.toLocaleString("en-US")} rows.`);
@@ -162,6 +163,14 @@ export class MockChatApi implements ChatApi {
 
   async query(request: QueryRequest, signal?: AbortSignal): Promise<QueryResponse> {
     await wait(this.delayMs, signal);
+    const previewLimit = request.maxPreviewRows ?? PREVIEW_LIMIT;
+    const sendResult = (
+      answer: string,
+      sql: string,
+      columnNames: string[],
+      rows: Row[],
+      options: { truncated?: boolean; attempts?: Attempt[]; previewLimit?: number } = {},
+    ) => result(answer, sql, columnNames, rows, { previewLimit, ...options });
     const q = request.question.toLowerCase();
     const dictionaryNote = request.dataDictionary
       ? "\n\n_Per the data dictionary, withdrawn reports are excluded by default._"
@@ -193,7 +202,7 @@ export class MockChatApi implements ChatApi {
     }
     if (q.includes("everything") || q.includes("all rows")) {
       const rows = makeRows(MAX_RESULT_ROWS, 11);
-      return result(
+      return sendResult(
         "This returns every report, so I've fetched the first 50,000. The sample I read is dominated by phishing and online shopping scams contacted by email and text message." +
           dictionaryNote,
         `SELECT * FROM ${TABLE}`,
@@ -203,7 +212,7 @@ export class MockChatApi implements ChatApi {
       );
     }
     if (q.includes("delete") || q.includes("drop")) {
-      return result(
+      return sendResult(
         "I can only read data, so I didn't change anything. Here are the 10 most recent reports instead.",
         `SELECT TOP 10 * FROM ${TABLE} ORDER BY date_reported DESC`,
         COLUMNS.map((c) => c.name),
@@ -225,7 +234,7 @@ export class MockChatApi implements ChatApi {
       const rows = Array.from(counts, ([month, report_count]) => ({ month, report_count })).sort((a, b) =>
         a.month.localeCompare(b.month),
       );
-      return result(
+      return sendResult(
         `Reports by month${followUp}. Volumes are fairly steady at roughly ${Math.round(this.data.length / rows.length)} a month, with no single month standing out.` +
           dictionaryNote,
         `SELECT FORMAT(date_reported, 'yyyy-MM') AS month, COUNT(*) AS report_count\nFROM ${TABLE}\nGROUP BY FORMAT(date_reported, 'yyyy-MM')\nORDER BY month`,
@@ -235,7 +244,7 @@ export class MockChatApi implements ChatApi {
     }
     if (q.includes("most common") || q.includes("top")) {
       const rows = countBy(this.data, "other_product_name", 10);
-      return result(
+      return sendResult(
         `The most common value of **other_product_name** is **${rows[0].other_product_name}** with ${rows[0].report_count} reports. Blank values are shown as (blank).` +
           dictionaryNote,
         `SELECT TOP 10 ISNULL(other_product_name, '(blank)') AS other_product_name, COUNT(*) AS report_count\nFROM ${TABLE}\nGROUP BY other_product_name\nORDER BY report_count DESC`,
@@ -245,7 +254,7 @@ export class MockChatApi implements ChatApi {
     }
     if (q.includes("kind of field") || q.includes("sample") || q.includes("describe")) {
       const rows = this.data.slice(0, 30).map((row) => ({ other_product_name: row.other_product_name }));
-      return result(
+      return sendResult(
         "**other_product_name** is free text naming the product or service the scam involved, for example gift cards, cryptocurrency wallets or marketplace listings. It is often blank." +
           dictionaryNote,
         `SELECT TOP 30 other_product_name FROM ${TABLE} TABLESAMPLE (1 PERCENT)`,
@@ -254,7 +263,7 @@ export class MockChatApi implements ChatApi {
       );
     }
     if (q.includes("how many") || q.includes("total") || q.includes("count")) {
-      return result(
+      return sendResult(
         `There are **${this.data.length.toLocaleString("en-US")}** reports in the table${followUp}. Amounts like $1,200 or $500 display correctly.` +
           dictionaryNote,
         `SELECT COUNT(*) AS total_reports FROM ${TABLE}`,
@@ -263,7 +272,7 @@ export class MockChatApi implements ChatApi {
       );
     }
     const rows = this.data.slice(0, 25);
-    return result(
+    return sendResult(
       `Here are 25 reports matching your question${followUp}. Ask about counts, trends or a specific column for a more focused answer.` +
         dictionaryNote,
       `SELECT TOP 25 * FROM ${TABLE}`,

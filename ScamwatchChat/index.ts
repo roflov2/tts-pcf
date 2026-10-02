@@ -10,7 +10,7 @@ import { ChatApp, type ChatAppProps } from "./components/ChatApp";
 import { HttpChatApi, MisconfiguredChatApi } from "./services/apiClient";
 import { defaultRedirectUri, MsalTokenProvider } from "./services/auth";
 import { MockChatApi } from "./services/mockApi";
-import { DEFAULT_EXAMPLE_QUESTIONS, DEFAULT_PLACEHOLDER, DEFAULT_TITLE } from "./defaults";
+import { DEFAULT_EXAMPLE_QUESTIONS, DEFAULT_PLACEHOLDER, DEFAULT_PREVIEW_ROWS, DEFAULT_TITLE } from "./defaults";
 import type { ChatApi, ControlOutputs } from "./types";
 import { DEFAULT_HISTORY_TURNS, parseLines } from "./utils/format";
 import { createTranslator, type Translate } from "./utils/strings";
@@ -53,6 +53,7 @@ export class ScamwatchChat implements ComponentFramework.ReactControl<IInputs, I
       exampleQuestions: examples.length ? examples : DEFAULT_EXAMPLE_QUESTIONS,
       showTableOverview: p.showTableOverview?.raw !== false,
       defaultMaxAttempts: p.defaultMaxAttempts?.raw ?? 3,
+      defaultPreviewRows: p.defaultPreviewRows?.raw ?? DEFAULT_PREVIEW_ROWS,
       allowFollowUps: p.allowFollowUps?.raw !== false,
       historyTurns: p.historyTurns?.raw ?? DEFAULT_HISTORY_TURNS,
       makerDictionary: p.dataDictionary?.raw ?? null,

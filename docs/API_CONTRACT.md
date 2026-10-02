@@ -43,13 +43,14 @@ If the schema can't be read (`agent.schema_error`), return a 5xx with
     { "role": "assistant", "content": "There are 1,402.\n\nSQL used:\nSELECT COUNT(*) …" }
   ],
   "maxAttempts": 3,
+  "maxPreviewRows": 20,
   "dataDictionary": "Data dictionary for …"
 }
 ```
 
 The control builds `history` exactly as `build_history()` in `app.py` did (last
 N turns, with "SQL used:" appended to answers), so the server passes it straight
-through: `agent.query(question, max_attempts=maxAttempts, history=history,
+through: `agent.query(question, max_attempts=maxAttempts, max_preview_rows=maxPreviewRows, history=history,
 data_dictionary=dataDictionary)`. `dataDictionary` is omitted when none is
 active. It is already tidied and capped by the control, and running
 `prepare_data_dictionary` again on the server is safe.

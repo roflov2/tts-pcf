@@ -75,6 +75,7 @@ export interface ChatAppProps {
   exampleQuestions: string[];
   showTableOverview: boolean;
   defaultMaxAttempts: number;
+  defaultPreviewRows: number;
   allowFollowUps: boolean;
   historyTurns: number;
   /** The app maker's dictionary text (dataDictionary property). */
@@ -168,7 +169,7 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
     api,
     storageNamespace: props.storageNamespace,
     historyTurns: props.historyTurns,
-    initialSettings: { maxAttempts: props.defaultMaxAttempts, useHistory: props.allowFollowUps },
+    initialSettings: { maxAttempts: props.defaultMaxAttempts, maxPreviewRows: props.defaultPreviewRows, useHistory: props.allowFollowUps },
     maker,
     allowUpload: props.allowDictionaryUpload,
     maxDictionaryChars: maxChars,

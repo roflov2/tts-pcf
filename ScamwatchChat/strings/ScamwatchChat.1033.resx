@@ -82,6 +82,12 @@
   <data name="defaultMaxAttempts_Desc_Key" xml:space="preserve">
     <value>Initial number of times (1-5) the model may rewrite a query that fails. Users can change it in Settings.</value>
   </data>
+  <data name="defaultPreviewRows_Display_Key" xml:space="preserve">
+    <value>Records for model</value>
+  </data>
+  <data name="defaultPreviewRows_Desc_Key" xml:space="preserve">
+    <value>Initial number of result rows (10-100) the model reads to write its interpretation. Users can change it in Settings.</value>
+  </data>
   <data name="allowFollowUps_Display_Key" xml:space="preserve">
     <value>Allow follow-up questions</value>
   </data>
@@ -321,6 +327,12 @@
   </data>
   <data name="ui_AttemptsHelp" xml:space="preserve">
     <value>How many times the model may rewrite a query that fails.</value>
+  </data>
+  <data name="ui_PreviewRows" xml:space="preserve">
+    <value>Records shown to the model: {0}</value>
+  </data>
+  <data name="ui_PreviewRowsHelp" xml:space="preserve">
+    <value>How many query result rows the model reads to write its interpretation.</value>
   </data>
   <data name="ui_FollowUps" xml:space="preserve">
     <value>Allow follow-up questions</value>

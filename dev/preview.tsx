@@ -95,6 +95,7 @@ function Preview() {
             exampleQuestions={DEFAULT_EXAMPLE_QUESTIONS}
             showTableOverview
             defaultMaxAttempts={3}
+            defaultPreviewRows={20}
             allowFollowUps
             historyTurns={3}
             makerDictionary={maker ? MAKER_DICTIONARY : null}
