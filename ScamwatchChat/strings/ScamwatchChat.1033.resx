@@ -83,10 +83,10 @@
     <value>Initial number of times (1-5) the model may rewrite a query that fails. Users can change it in Settings.</value>
   </data>
   <data name="defaultPreviewRows_Display_Key" xml:space="preserve">
-    <value>Records for model</value>
+    <value>Rows the model reads</value>
   </data>
   <data name="defaultPreviewRows_Desc_Key" xml:space="preserve">
-    <value>Initial number of result rows (10-100) the model reads to write its interpretation. Users can change it in Settings.</value>
+    <value>Initial number of rows of each result (5-200) the model reads to write its answer. Only limits what is sent to the model; the full result always appears in the table. Users can change it in Settings.</value>
   </data>
   <data name="allowFollowUps_Display_Key" xml:space="preserve">
     <value>Allow follow-up questions</value>
@@ -256,6 +256,39 @@
   <data name="ui_NoErrorMessage" xml:space="preserve">
     <value>No error message returned.</value>
   </data>
+  <data name="ui_NoRows" xml:space="preserve">
+    <value>No rows.</value>
+  </data>
+  <data name="ui_NullCell" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ui_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ui_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="ui_GridSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="ui_GridSearchPlaceholder" xml:space="preserve">
+    <value>Search this table</value>
+  </data>
+  <data name="ui_GridMatches" xml:space="preserve">
+    <value>{0} of {1} rows match</value>
+  </data>
+  <data name="ui_GridNoMatches" xml:space="preserve">
+    <value>No rows match the search.</value>
+  </data>
+  <data name="ui_GridFullScreen" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="ui_GridCloseFullScreen" xml:space="preserve">
+    <value>Close full screen</value>
+  </data>
+  <data name="ui_GridResizeColumn" xml:space="preserve">
+    <value>Resize column {0}</value>
+  </data>
   <data name="ui_WrittenWithDictionary" xml:space="preserve">
     <value>Written with the data dictionary {0}.</value>
   </data>
@@ -283,23 +316,59 @@
   <data name="ui_DictionaryViewerCaption" xml:space="preserve">
     <value>This text is sent to the assistant with each question.</value>
   </data>
+  <data name="ui_ConnectionHeading" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="ui_ConnectionServer" xml:space="preserve">
+    <value>SQL server</value>
+  </data>
+  <data name="ui_ConnectionDatabase" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="ui_ConnectionTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="ui_ConnectionModel" xml:space="preserve">
+    <value>Model deployment</value>
+  </data>
+  <data name="ui_ConnectionReconnect" xml:space="preserve">
+    <value>Reconnect</value>
+  </data>
+  <data name="ui_ConnectionConnecting" xml:space="preserve">
+    <value>Connecting…</value>
+  </data>
+  <data name="ui_ConnectionFailed" xml:space="preserve">
+    <value>Not connected. Fix the problem shown, then reconnect.</value>
+  </data>
+  <data name="ui_ConnectionCaption" xml:space="preserve">
+    <value>Set by the assistant's API, which the app points to. Reconnect to reload the table's columns and sample rows.</value>
+  </data>
   <data name="ui_DictionaryHeading" xml:space="preserve">
     <value>Data dictionary</value>
   </data>
   <data name="ui_DictionaryCaption" xml:space="preserve">
     <value>Optional. A .txt file explaining what the columns mean, what codes stand for, and which rows or definitions your team uses. It's sent with every question to steer the SQL.</value>
   </data>
-  <data name="ui_DictionaryUpload" xml:space="preserve">
-    <value>Upload .txt file</value>
+  <data name="ui_DictionaryDrop" xml:space="preserve">
+    <value>Drag and drop a .txt file here</value>
   </data>
-  <data name="ui_DictionaryReplace" xml:space="preserve">
-    <value>Replace file</value>
+  <data name="ui_DictionaryLimit" xml:space="preserve">
+    <value>Limit {0} MB per file • TXT</value>
+  </data>
+  <data name="ui_DictionaryBrowse" xml:space="preserve">
+    <value>Browse files</value>
   </data>
   <data name="ui_DictionaryRemove" xml:space="preserve">
-    <value>Remove</value>
+    <value>Remove {0}</value>
   </data>
   <data name="ui_DictionaryReading" xml:space="preserve">
     <value>Reading {0}…</value>
+  </data>
+  <data name="ui_DictionaryWrongType" xml:space="preserve">
+    <value>{0} isn't a .txt file. Save it as plain text (.txt) and upload it again.</value>
+  </data>
+  <data name="ui_DictionaryReadFailed" xml:space="preserve">
+    <value>{0} couldn't be read. {1}</value>
   </data>
   <data name="ui_DictionaryStatus" xml:space="preserve">
     <value>{0} is used for new questions. Names {1} of {2} columns in {3}.</value>
@@ -329,10 +398,10 @@
     <value>How many times the model may rewrite a query that fails.</value>
   </data>
   <data name="ui_PreviewRows" xml:space="preserve">
-    <value>Records shown to the model: {0}</value>
+    <value>Rows the model reads per result</value>
   </data>
   <data name="ui_PreviewRowsHelp" xml:space="preserve">
-    <value>How many query result rows the model reads to write its interpretation.</value>
+    <value>Only limits what's sent to the model. The full result always appears in the table.</value>
   </data>
   <data name="ui_FollowUps" xml:space="preserve">
     <value>Allow follow-up questions</value>

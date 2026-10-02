@@ -10,7 +10,8 @@ export const DEFAULT_EXAMPLE_QUESTIONS = [
 export const DEFAULT_TITLE = "Scamwatch SQL assistant";
 export const DEFAULT_PLACEHOLDER = "Ask about the scam reports…";
 export const DEFAULT_MAKER_DICTIONARY_NAME = "Team dictionary";
+/** Rows the model reads per result: the number_input in app.py's Connection form (5–200, default 20). */
 export const DEFAULT_PREVIEW_ROWS = 20;
-export const MIN_PREVIEW_ROWS = 10;
-export const MAX_PREVIEW_ROWS = 100;
-export const PREVIEW_ROWS_STEP = 5;
+export const MIN_PREVIEW_ROWS = 5;
+export const MAX_PREVIEW_ROWS = 200;
+export const PREVIEW_ROWS_STEP = 1;

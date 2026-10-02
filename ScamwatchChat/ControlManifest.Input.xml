@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.0.1"
+  <control namespace="Scamwatch" constructor="ScamwatchChat" version="1.1.0"
     display-name-key="ScamwatchChat_Display_Key" description-key="ScamwatchChat_Desc_Key"
     control-type="virtual">
 

@@ -17,6 +17,8 @@ import type { Attempt, ChatApi, ColumnInfo, QueryRequest, QueryResponse, Row, Sc
 
 const TABLE = "Reporting.ScamWatchReportFiltered";
 const DATABASE = "NASC_ODS";
+const SERVER = "sqlserver.example.com";
+const MODEL = "gpt-4o";
 const PREVIEW_LIMIT = 20;
 const MAX_RESULT_ROWS = 50_000;
 
@@ -155,6 +157,8 @@ export class MockChatApi implements ChatApi {
     return {
       table: TABLE,
       database: DATABASE,
+      server: SERVER,
+      model: MODEL,
       columns: COLUMNS,
       sampleRows: SAMPLE_ROWS,
       limits: { maxDictionaryChars: 40_000, maxResultRows: MAX_RESULT_ROWS },

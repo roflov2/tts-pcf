@@ -1,5 +1,18 @@
 import type { AssistantChatMessage, ChatMessage } from "../types";
-import { buildHistory, parseLines, protectIdentifiers, rowLabel, toCsv, uniqueColumns } from "../utils/format";
+import {
+  buildHistory,
+  formatBytes,
+  hardLineBreaks,
+  LITERAL_STAR,
+  LITERAL_UNDERSCORE,
+  parseLines,
+  protectIdentifiers,
+  protectSpacedMarkers,
+  restoreLiterals,
+  rowLabel,
+  toCsv,
+  uniqueColumns,
+} from "../utils/format";
 import { createTranslator, DEFAULT_STRINGS, format } from "../utils/strings";
 
 const assistant = (content: string, sql?: string | null): AssistantChatMessage => ({
@@ -101,5 +114,36 @@ describe("protectIdentifiers", () => {
     expect(protectIdentifiers("use `report_id` or\n```sql\nSELECT a_b\n```\nthen amount_lost")).toBe(
       "use `report_id` or\n```sql\nSELECT a_b\n```\nthen amount\\_lost",
     );
+  });
+});
+
+describe("protectSpacedMarkers", () => {
+  it("keeps * and _ with spaces on both sides literal, as CommonMark does", () => {
+    const S = LITERAL_STAR;
+    expect(protectSpacedMarkers("count(*) and SELECT * FROM t")).toBe(`count(*) and SELECT ${S} FROM t`);
+    expect(protectSpacedMarkers("5 * 3 ** 2 and x _ y")).toBe(`5 ${S} 3 ${S}${S} 2 and x ${LITERAL_UNDERSCORE} y`);
+    expect(restoreLiterals(protectSpacedMarkers("5 * 3 _ 2"))).toBe("5 * 3 _ 2");
+  });
+
+  it("leaves emphasis, list bullets and code alone", () => {
+    const text = "*rate* and **bold**\n* item\n  * nested\n`a * b`\n```\nSELECT * FROM t\n```";
+    expect(protectSpacedMarkers(text)).toBe(text);
+  });
+});
+
+describe("hardLineBreaks", () => {
+  it("turns single line breaks into markdown line breaks outside code", () => {
+    expect(hardLineBreaks("one\ntwo\n\nthree")).toBe("one  \ntwo\n\nthree");
+    expect(hardLineBreaks("```\na\nb\n```")).toBe("```\na\nb\n```");
+  });
+});
+
+describe("formatBytes", () => {
+  it.each([
+    [512, "512 B"],
+    [4200, "4.2 KB"],
+    [1_000_000, "1.0 MB"],
+  ])("%d → %s", (bytes, expected) => {
+    expect(formatBytes(bytes)).toBe(expected);
   });
 });

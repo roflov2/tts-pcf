@@ -17,6 +17,10 @@ export interface ColumnInfo {
 export interface SchemaResponse {
   table: string;
   database: string;
+  /** SQL server host (server_name on the agent). Optional; shown in Settings → Connection. */
+  server?: string;
+  /** Model deployment (deployment_name on the agent). Optional; shown in Settings → Connection. */
+  model?: string;
   columns: ColumnInfo[];
   sampleRows: Row[];
   limits?: {
@@ -39,7 +43,7 @@ export interface QueryRequest {
   history: HistoryMessage[];
   /** 1–5. Model rounds allowed before giving up. */
   maxAttempts: number;
-  /** 10–100. How many query result rows the model reads for interpretation. Default 20. */
+  /** 5–200. How many result rows the model reads (llm_preview_limit on the agent). Default 20. */
   maxPreviewRows?: number;
   /** Plain-text data dictionary, sent with every question when one is active. */
   dataDictionary?: string;
@@ -106,6 +110,8 @@ export interface DataDictionary {
   text: string;
   truncated: boolean;
   source: "upload" | "maker";
+  /** Size of the uploaded file, shown beside its name as st.file_uploader did. */
+  bytes?: number;
 }
 
 /** Values the control reports back to the hosting app. */

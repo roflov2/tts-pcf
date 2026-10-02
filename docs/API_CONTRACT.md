@@ -10,13 +10,16 @@ the scope set in the control's `apiScope` property. JSON in, JSON out.
 
 ## `GET /schema`
 
-Called once when the control loads. Fills the caption, the columns table, the
-sample rows and the data dictionary template.
+Called when the control loads, and again when the user selects **Reconnect** in
+Settings → Connection. Fills the caption, the Connection section, the columns
+table, the sample rows and the data dictionary template.
 
 ```json
 {
   "table": "Reporting.ScamWatchReportFiltered",
   "database": "NASC_ODS",
+  "server": "sqlserver.example.com",
+  "model": "gpt-4o",
   "columns": [{ "name": "report_id", "type": "int" }],
   "sampleRows": [{ "report_id": 100000, "state": "NSW" }],
   "limits": { "maxDictionaryChars": 40000, "maxResultRows": 50000 }
@@ -25,6 +28,9 @@ sample rows and the data dictionary template.
 
 | Field | From the agent |
 |---|---|
+| `table`, `database` | `agent.table_name`, `agent.database_name` |
+| `server` | `agent.server_name`; optional, shown in Settings → Connection when present |
+| `model` | `agent.deployment_name`; optional, shown in Settings → Connection when present |
 | `columns` | `agent.columns` (list of `(name, data_type)`) |
 | `sampleRows` | `agent.sample_rows`, made JSON-safe |
 | `limits.maxDictionaryChars` | `MAX_DICTIONARY_CHARS`; optional, the control assumes 40,000 |
@@ -51,7 +57,9 @@ If the schema can't be read (`agent.schema_error`), return a 5xx with
 The control builds `history` exactly as `build_history()` in `app.py` did (last
 N turns, with "SQL used:" appended to answers), so the server passes it straight
 through: `agent.query(question, max_attempts=maxAttempts, max_preview_rows=maxPreviewRows, history=history,
-data_dictionary=dataDictionary)`. `dataDictionary` is omitted when none is
+data_dictionary=dataDictionary)`. `maxPreviewRows` is 5–200 (the range of the
+Streamlit app's "Rows the model reads per result" input) and plays the part of
+the agent's `llm_preview_limit`, per question rather than per agent. `dataDictionary` is omitted when none is
 active. It is already tidied and capped by the control, and running
 `prepare_data_dictionary` again on the server is safe.
 
