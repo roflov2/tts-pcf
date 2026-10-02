@@ -31,6 +31,15 @@ function renderApp(overrides: Partial<ChatAppProps> = {}) {
 
 beforeEach(() => window.sessionStorage.clear());
 
+/** A File with arrayBuffer(), which jsdom's File lacks. */
+function textFile(content: string, name: string): File {
+  const file = new File([content], name, { type: "text/plain" });
+  if (!("arrayBuffer" in file)) {
+    Object.defineProperty(file, "arrayBuffer", { value: () => Promise.resolve(new TextEncoder().encode(content).buffer) });
+  }
+  return file;
+}
+
 describe("answerTabs (render_answer tab rules)", () => {
   const base: AssistantChatMessage = {
     role: "assistant",
@@ -150,30 +159,106 @@ describe("ChatApp with the mock API", () => {
     await waitFor(() => expect(signIn).toHaveBeenCalled());
   });
 
-  it("adjusts the records shown to the model in settings", async () => {
-    renderApp();
-    await screen.findByText(/runs it against/);
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    const drawer = await screen.findByRole("dialog");
-    expect(within(drawer).getByText("Records shown to the model: 20")).toBeInTheDocument();
-  });
-
   it("uploads a dictionary from the settings drawer", async () => {
     renderApp();
     await screen.findByText(/runs it against/);
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     const drawer = await screen.findByRole("dialog");
 
-    const file = new File(["report_id (int): unique id\nstate: where the person lives\n"], "dictionary.txt", { type: "text/plain" });
-    if (!("arrayBuffer" in file)) {
-      // jsdom's File lacks arrayBuffer(); Blob in browsers has it.
-      Object.defineProperty(file, "arrayBuffer", {
-        value: () => Promise.resolve(new TextEncoder().encode("report_id (int): unique id\nstate: where the person lives\n").buffer),
-      });
-    }
     const input = drawer.querySelector('input[type="file"]') as HTMLInputElement;
-    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.change(input, { target: { files: [textFile("report_id (int): unique id\nstate: where the person lives\n", "dictionary.txt")] } });
 
     expect(await within(drawer).findByText(/dictionary\.txt is used for new questions\. Names 2 of 9 columns/)).toBeInTheDocument();
+  });
+
+  it("takes a dictionary dropped on the upload area, like st.file_uploader, and only .txt files", async () => {
+    renderApp();
+    await screen.findByText(/runs it against/);
+    fireEvent.click(screen.getByLabelText("Settings"));
+    const drawer = await screen.findByRole("dialog", { hidden: true });
+    const zone = within(drawer).getByRole("group", { name: "Drag and drop a .txt file here", hidden: true });
+
+    fireEvent.drop(zone, { dataTransfer: { files: [textFile("x", "notes.pdf")], types: ["Files"] } });
+    expect(await within(drawer).findByText(/notes\.pdf isn't a \.txt file/)).toBeInTheDocument();
+
+    const text = "report_id (int): unique id\n";
+    fireEvent.drop(zone, { dataTransfer: { files: [textFile(text, "dictionary.txt")], types: ["Files"] } });
+    expect(await within(drawer).findByText(/dictionary\.txt is used for new questions\. Names 1 of 9 columns/)).toBeInTheDocument();
+    expect(within(drawer).getByText(`${new TextEncoder().encode(text).length} B`)).toBeInTheDocument();
+    expect(within(drawer).queryByText(/isn't a \.txt file/)).not.toBeInTheDocument();
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "Remove dictionary.txt", hidden: true }));
+    await waitFor(() => expect(within(drawer).queryByText(/dictionary\.txt is used/)).not.toBeInTheDocument());
+  });
+
+  it("shows the connection and the rows the model reads, and reconnects without losing the chat", async () => {
+    const api = new MockChatApi(0);
+    const getSchema = jest.spyOn(api, "getSchema");
+    const query = jest.spyOn(api, "query");
+    renderApp({ api });
+    const box = await screen.findByLabelText("Your question");
+    await waitFor(() => expect(box).not.toBeDisabled());
+
+    fireEvent.click(screen.getByLabelText("Settings"));
+    const drawer = await screen.findByRole("dialog", { hidden: true });
+    expect(within(drawer).getByText("sqlserver.example.com")).toBeInTheDocument();
+    expect(within(drawer).getByText("Reporting.ScamWatchReportFiltered")).toBeInTheDocument();
+    expect(within(drawer).getByText("gpt-4o")).toBeInTheDocument();
+
+    const rows = within(drawer).getByLabelText("Rows the model reads per result");
+    expect(rows).toHaveValue("20");
+    fireEvent.change(rows, { target: { value: "150" } });
+    fireEvent.blur(rows);
+    await waitFor(() => expect(rows).toHaveValue("150"));
+
+    fireEvent.change(box, { target: { value: "How many reports?" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    await screen.findByText(/reports in the table/);
+    expect((query.mock.calls[0][0] as QueryRequest).maxPreviewRows).toBe(150);
+
+    const reconnect = within(drawer).getByText("Reconnect").closest("button") as HTMLButtonElement;
+    fireEvent.click(reconnect);
+    await waitFor(() => expect(getSchema).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(reconnect).not.toBeDisabled());
+    expect(screen.getByText(/reports in the table/)).toBeInTheDocument();
+  });
+
+  it("renders questions as markdown and searches and expands results like st.dataframe", async () => {
+    renderApp();
+    const box = await screen.findByLabelText("Your question");
+    await waitFor(() => expect(box).not.toBeDisabled());
+    fireEvent.change(box, { target: { value: "How many reports, **in total**?" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    await screen.findByText("Results (1 row)");
+    expect(screen.getByText("in total", { selector: "strong" })).toBeInTheDocument();
+
+    // Label queries: role queries compute styles for every element, which is slow in jsdom.
+    fireEvent.click(screen.getByLabelText("Search", { selector: "button" }));
+    const search = screen.getByLabelText("Search", { selector: "input" });
+    fireEvent.change(search, { target: { value: "4000" } });
+    expect(await screen.findByText("1 of 1 rows match")).toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "no such value" } });
+    expect(await screen.findByText("No rows match the search.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Full screen"));
+    const dialog = await screen.findByRole("dialog", { hidden: true });
+    expect(dialog.querySelector('[role="table"][aria-label="Results (1 row)"]')).not.toBeNull();
+  });
+
+  it("keeps the user's answering settings when the control is shown again", async () => {
+    const storageNamespace = "settings-test";
+    const first = renderApp({ storageNamespace });
+    await screen.findByText(/runs it against/);
+    fireEvent.click(screen.getByLabelText("Settings"));
+    const drawer = await screen.findByRole("dialog", { hidden: true });
+    const followUps = within(drawer).getByRole("switch", { name: "Allow follow-up questions", hidden: true });
+    fireEvent.click(followUps);
+    await waitFor(() => expect(followUps).not.toBeChecked());
+    first.unmount();
+
+    renderApp({ storageNamespace });
+    await screen.findByText(/runs it against/);
+    fireEvent.click(screen.getByLabelText("Settings"));
+    expect(within(await screen.findByRole("dialog", { hidden: true })).getByRole("switch", { name: "Allow follow-up questions", hidden: true })).not.toBeChecked();
   });
 });

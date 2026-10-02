@@ -12,7 +12,7 @@ download), the SQL and any failed attempts.
 - Works in **canvas** and **model-driven** apps (no `Xrm` or Dataverse calls).
 - **Data dictionary**: users upload a `.txt` file, or the app maker supplies one, and it's sent with every question.
 - **Follow-up questions**: recent questions and the SQL behind each answer are sent as context.
-- Results tables of **50,000 rows** scroll smoothly (virtualised) and download as CSV.
+- Results tables work like Streamlit's `st.dataframe`: sort, search, resize columns, full screen, CSV download. **50,000 rows** scroll smoothly (virtualised).
 - **Mock mode** with built-in sample data, so you can try it with no backend.
 - Uses the platform's React 16 and Fluent UI v9, so the bundle is small and it follows the app's theme.
 
@@ -45,7 +45,7 @@ code .                                 # or: antigravity .
 Then, in either path:
 
 ```bash
-npm test          # 57 unit and UI tests, about 20 s
+npm test          # 77 unit and UI tests, under a minute
 npm run preview   # open http://localhost:5173: the control with sample data
 ```
 
@@ -118,7 +118,7 @@ Inputs:
 | `exampleQuestions` | Multiline | the 3 Streamlit examples | One per line |
 | `showTableOverview` | Yes/No | Yes | Columns, sample rows, dictionary viewer |
 | `defaultMaxAttempts` | Number | 3 | 1–5; users can change it in Settings |
-| `defaultPreviewRows` | Number | 20 | 10–100; users can change it in Settings |
+| `defaultPreviewRows` | Number | 20 | 5–200 rows of each result the model reads; users can change it in Settings |
 | `allowFollowUps` | Yes/No | Yes | Initial value of the follow-ups switch |
 | `historyTurns` | Number | 3 | Question/answer pairs sent for follow-ups |
 | `dataDictionary` | Multiline | | Team dictionary, e.g. from a Dataverse or SharePoint text column. A user's upload overrides it |
@@ -149,18 +149,20 @@ ScamwatchChat/
   defaults.ts                 default title, placeholder, example questions
   types.ts                    API contract + UI state types (source of truth)
   components/
-    ChatApp.tsx               root: loads /schema, layout, settings drawer, wires useChat
+    ChatApp.tsx               root: loads /schema (and reloads it on Reconnect), layout, settings drawer, wires useChat
     Header.tsx                title, caption, Clear and Settings buttons
-    TableOverview.tsx         columns (+ In dictionary), sample rows, dictionary viewer
+    TableOverview.tsx         columns grid (+ In dictionary checkboxes), sample rows, dictionary viewer
     ExampleQuestions.tsx      starter questions + "upload a dictionary" hint
-    ChatTranscript.tsx        user/assistant turns, thinking row with Stop
+    ChatTranscript.tsx        user/assistant turns (questions as markdown), thinking row with Stop
     AssistantMessage.tsx      error, markdown answer, data note, Results/SQL/Failed tabs, CSV
-    ResultsGrid.tsx           virtualised sortable table (react-window)
-    SqlBlock.tsx              code block with copy
+    MarkdownText.tsx          markdown rendering shared by answers and questions
+    ResultsGrid.tsx           st.dataframe: virtualised (react-window), sort, search, resize, full screen
+    SqlBlock.tsx              st.code: SQL highlighting, copy button
     Composer.tsx              question box: Enter sends, Shift+Enter for a new line
     SettingsDrawer.tsx        inline drawer ≥ 900 px wide, overlay below (replaces the Streamlit sidebar)
-    DictionarySection.tsx     upload / replace / remove, status, truncation warning, template download
-    AnsweringSection.tsx      attempts slider, follow-ups switch, Clear
+    ConnectionSection.tsx     server, database, table, model from /schema; Reconnect
+    DictionarySection.tsx     drop zone / Browse files, file name and size, status, truncation warning, template
+    AnsweringSection.tsx      attempts slider, rows the model reads, follow-ups switch, Clear
     SignInPrompt.tsx          interactive sign-in when silent sign-in fails
     icons.tsx                 GENERATED inline SVG icons (npm run icons)
   services/
@@ -169,10 +171,11 @@ ScamwatchChat/
     mockApi.ts                sample data and canned scenarios
   state/
     useChat.ts                reducer + hook: messages, pending, settings, dictionary precedence
-    storage.ts                sessionStorage persistence (survives canvas screen changes)
+    storage.ts                sessionStorage persistence of chat, settings, dictionary (survives canvas screen changes)
   utils/
     dictionary.ts             ports of decode_text, prepare_data_dictionary, columns_mentioned, …
-    format.ts                 rowLabel, buildHistory, toCsv, downloads, protectIdentifiers
+    format.ts                 rowLabel, buildHistory, toCsv, downloads, markdown safety helpers
+    sql.ts                    T-SQL tokenizer for highlighting
     strings.ts                UI text defaults + translator (keys mirror the .resx)
   strings/ScamwatchChat.1033.resx   all display text (manifest + UI)
   __tests__/                  Jest tests
@@ -189,14 +192,20 @@ Dictionary: `DictionarySection → readDictionary → useChat.setUploaded → ac
 | Streamlit `app.py` | Here |
 |---|---|
 | `st.title` + caption | `Header` |
-| Sidebar: Connection | Not in the UI: backend config. `apiBaseUrl` and related properties |
+| Sidebar: Connection (`render_connection_settings`) | `ConnectionSection`: shows the server, database, table and model the API reports, with **Reconnect**. Not editable: the API runs SQL under its own identity, so the app maker chooses the backend with `apiBaseUrl` |
+| Connection: Rows the model reads per result (5–200) | `AnsweringSection` number box, same range and help text, sent per question as `maxPreviewRows` |
+| Connection error page with a checklist | Error message, checklist and **Try again** |
 | Sidebar: Data dictionary (`render_dictionary_settings`) | `DictionarySection` |
+| `st.file_uploader(type=["txt"])`: drop zone, Browse files, file name and size, remove | Same, in `DictionarySection` |
 | Sidebar: Answering (`render_answering_settings`) | `AnsweringSection` |
 | `render_table_overview` | `TableOverview` |
 | `render_examples` | `ExampleQuestions` |
 | `render_answer` | `AssistantMessage` (`answerTabs()` holds the tab rules) |
-| `st.dataframe` / `to_dataframe` / `_arrow_safe` | `ResultsGrid` (values arrive JSON-safe from the API) |
+| `st.markdown` for questions and answers | `MarkdownText` (`protectSpacedMarkers` keeps `SELECT * FROM` literal, as CommonMark does) |
+| `st.dataframe` / `to_dataframe` / `_arrow_safe` | `ResultsGrid`: sort, search, resize columns, full screen, booleans as checkboxes, nulls as `None` (values arrive JSON-safe from the API) |
+| `st.code(sql, language="sql")`: highlighting and copy | `SqlBlock` (`tokenizeSql`) |
 | `st.download_button` CSV (`utf-8-sig`) | `toCsv` (UTF-8 BOM) + `downloadText` |
+| `st.session_state` (messages, widget values) | `useChat` + `storage.ts` (session storage) |
 | `escape_dollars` | Not needed (no LaTeX); `protectIdentifiers` stops `snake_case` turning italic |
 | `build_history`, `row_label` | `buildHistory`, `rowLabel` |
 | `decode_text`, `columns_mentioned`, `read_dictionary`, `dictionary_template`, `template_file_name` | same names in camelCase in `utils/dictionary.ts` |

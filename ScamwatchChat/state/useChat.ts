@@ -18,7 +18,7 @@ import type {
 } from "../types";
 import { prepareDataDictionary } from "../utils/dictionary";
 import { buildHistory, newId } from "../utils/format";
-import { loadDictionary, loadMessages, saveDictionary, saveMessages } from "./storage";
+import { loadDictionary, loadMessages, loadSettings, saveDictionary, saveMessages, saveSettings } from "./storage";
 
 export const MIN_ATTEMPTS = 1;
 export const MAX_ATTEMPTS = 5;
@@ -168,16 +168,21 @@ export function useChat(options: UseChatOptions) {
   const { api, storageNamespace, historyTurns, initialSettings, maker, allowUpload, maxDictionaryChars } = options;
   const { onOutputs, onSignInRequired } = options;
 
-  const [state, dispatch] = React.useReducer(chatReducer, undefined, () => ({
-    messages: loadMessages(storageNamespace),
-    pending: false,
-    settings: {
-      ...initialSettings,
-      maxAttempts: clampAttempts(initialSettings.maxAttempts),
-      maxPreviewRows: clampPreviewRows(initialSettings.maxPreviewRows),
-    },
-    uploaded: loadDictionary(storageNamespace),
-  }));
+  const [state, dispatch] = React.useReducer(chatReducer, undefined, () => {
+    // Settings the user changed earlier this session win over the app's defaults.
+    const settings = { ...initialSettings, ...loadSettings(storageNamespace) };
+    return {
+      messages: loadMessages(storageNamespace),
+      pending: false,
+      settings: {
+        maxAttempts: clampAttempts(settings.maxAttempts),
+        maxPreviewRows: clampPreviewRows(settings.maxPreviewRows),
+        useHistory: settings.useHistory !== false,
+      },
+      uploaded: loadDictionary(storageNamespace),
+    };
+  });
+  const settingsChanged = React.useRef(false);
 
   const dictionary = React.useMemo(
     () => activeDictionary(state.uploaded, maker, allowUpload, maxDictionaryChars),
@@ -198,6 +203,13 @@ export function useChat(options: UseChatOptions) {
   React.useEffect(() => {
     saveDictionary(storageNamespace, state.uploaded);
   }, [state.uploaded, storageNamespace]);
+
+  // Only once the user changes something, so the app's defaults still apply until then.
+  React.useEffect(() => {
+    if (settingsChanged.current) {
+      saveSettings(storageNamespace, state.settings);
+    }
+  }, [state.settings, storageNamespace]);
 
   // Abort an in-flight question when the control unmounts.
   React.useEffect(() => () => controller.current?.abort(), []);
@@ -256,10 +268,10 @@ export function useChat(options: UseChatOptions) {
 
   const cancel = React.useCallback(() => controller.current?.abort(), []);
   const clear = React.useCallback(() => dispatch({ type: "clear" }), []);
-  const updateSettings = React.useCallback(
-    (settings: Partial<AnswerSettings>) => dispatch({ type: "settings", settings }),
-    [],
-  );
+  const updateSettings = React.useCallback((settings: Partial<AnswerSettings>) => {
+    settingsChanged.current = true;
+    dispatch({ type: "settings", settings });
+  }, []);
   const setUploaded = React.useCallback(
     (uploaded: DataDictionary | null) => dispatch({ type: "upload", dictionary: uploaded }),
     [],

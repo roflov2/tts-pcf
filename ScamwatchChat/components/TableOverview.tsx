@@ -1,6 +1,6 @@
 /**
  * The table's columns and sample rows, plus the active data dictionary
- * (render_table_overview in app.py).
+ * (render_table_overview in app.py). Both tables are st.dataframe-style grids.
  */
 
 import * as React from "react";
@@ -11,30 +11,16 @@ import {
   AccordionPanel,
   Caption1,
   makeStyles,
-  shorthands,
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableHeaderCell,
-  TableRow,
   tokens,
 } from "@fluentui/react-components";
-import { Checkmark16Regular } from "./icons";
-import type { DataDictionary, SchemaResponse } from "../types";
-import { columnsFromRows } from "../utils/format";
+import type { DataDictionary, Row, SchemaResponse } from "../types";
+import { columnsFromRows, safeFileStem } from "../utils/format";
 import { useStrings } from "../utils/strings";
 import { ResultsGrid } from "./ResultsGrid";
 import { SqlBlock } from "./SqlBlock";
 
 const useStyles = makeStyles({
   panel: { display: "flex", flexDirection: "column", rowGap: tokens.spacingVerticalS, paddingBottom: tokens.spacingVerticalS },
-  columns: {
-    maxHeight: "280px",
-    overflowY: "auto",
-    ...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-  },
   note: { color: tokens.colorNeutralForeground3 },
   viewer: { maxHeight: "360px", overflowY: "auto" },
 });
@@ -50,46 +36,44 @@ export function TableOverview({ schema, dictionary, mentioned }: TableOverviewPr
   const styles = useStyles();
   const t = useStrings();
   const missing = schema.columns.length - mentioned.size;
+  const title = t("ui_ColumnsIn", schema.table, schema.columns.length);
+  const stem = safeFileStem(schema.table);
+
+  // The columns as a frame, like the DataFrame app.py built, with the In dictionary checkboxes.
+  const { columnNames, columnRows } = React.useMemo(() => {
+    const names = [t("ui_Column"), t("ui_Type"), ...(dictionary ? [t("ui_InDictionary")] : [])];
+    const rows: Row[] = schema.columns.map((column) => ({
+      [names[0]]: column.name,
+      [names[1]]: column.type,
+      ...(dictionary ? { [names[2]]: mentioned.has(column.name) } : {}),
+    }));
+    return { columnNames: names, columnRows: rows };
+  }, [schema.columns, dictionary, mentioned, t]);
+  const sampleColumns = React.useMemo(() => columnsFromRows(schema.sampleRows), [schema.sampleRows]);
 
   return (
     <Accordion collapsible multiple>
       <AccordionItem value="columns">
-        <AccordionHeader size="small">{t("ui_ColumnsIn", schema.table, schema.columns.length)}</AccordionHeader>
+        <AccordionHeader size="small">{title}</AccordionHeader>
         <AccordionPanel>
           <div className={styles.panel}>
-            <div className={styles.columns}>
-              <Table size="extra-small" aria-label={t("ui_ColumnsIn", schema.table, schema.columns.length)}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHeaderCell>{t("ui_Column")}</TableHeaderCell>
-                    <TableHeaderCell>{t("ui_Type")}</TableHeaderCell>
-                    {dictionary && <TableHeaderCell>{t("ui_InDictionary")}</TableHeaderCell>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {schema.columns.map((column) => (
-                    <TableRow key={column.name}>
-                      <TableCell>{column.name}</TableCell>
-                      <TableCell>{column.type}</TableCell>
-                      {dictionary && (
-                        <TableCell aria-label={mentioned.has(column.name) ? "yes" : "no"}>
-                          {mentioned.has(column.name) ? <Checkmark16Regular /> : null}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <ResultsGrid
+              rows={columnRows}
+              columnNames={columnNames}
+              maxHeight={280}
+              ariaLabel={title}
+              csvFileName={`columns_${stem}.csv`}
+            />
             {dictionary && missing > 0 && <Caption1 className={styles.note}>{t("ui_NotInDictionary", missing)}</Caption1>}
             {schema.sampleRows.length > 0 && (
               <>
                 <Caption1 className={styles.note}>{t("ui_SampleRows")}</Caption1>
                 <ResultsGrid
                   rows={schema.sampleRows}
-                  columnNames={columnsFromRows(schema.sampleRows)}
+                  columnNames={sampleColumns}
                   maxHeight={140}
                   ariaLabel={t("ui_SampleRows")}
+                  csvFileName={`sample_rows_${stem}.csv`}
                 />
               </>
             )}
@@ -103,7 +87,7 @@ export function TableOverview({ schema, dictionary, mentioned }: TableOverviewPr
           <AccordionPanel>
             <div className={styles.panel}>
               <Caption1 className={styles.note}>{t("ui_DictionaryViewerCaption")}</Caption1>
-              <SqlBlock code={dictionary.text} copyable={false} className={styles.viewer} />
+              <SqlBlock code={dictionary.text} language="text" className={styles.viewer} />
             </div>
           </AccordionPanel>
         </AccordionItem>

@@ -1,11 +1,12 @@
 /**
- * Session storage for the conversation and the uploaded dictionary, so a canvas
- * screen change or a form reload doesn't wipe them. Every access is wrapped:
+ * Session storage for the conversation, the answering settings and the uploaded
+ * dictionary, so a canvas screen change or a form reload doesn't wipe them (they
+ * last the session, as Streamlit's session state did). Every access is wrapped:
  * storage can be blocked or full inside Power Apps frames, and the control must
  * work without it.
  */
 
-import type { AssistantChatMessage, ChatMessage, DataDictionary } from "../types";
+import type { AnswerSettings, AssistantChatMessage, ChatMessage, DataDictionary } from "../types";
 
 /** Result rows bigger than this aren't kept; the message says to ask again. */
 export const MAX_STORED_RESULT_CHARS = 2_000_000;
@@ -35,6 +36,7 @@ export function storageKeys(namespace: string) {
   return {
     messages: `scamwatch-chat:${namespace}:messages`,
     dictionary: `scamwatch-chat:${namespace}:dictionary`,
+    settings: `scamwatch-chat:${namespace}:settings`,
   };
 }
 
@@ -67,4 +69,18 @@ export function loadDictionary(namespace: string): DataDictionary | null {
 
 export function saveDictionary(namespace: string, dictionary: DataDictionary | null): void {
   write(storageKeys(namespace).dictionary, dictionary);
+}
+
+/** The answering settings the user chose this session. Fields of the wrong type are dropped. */
+export function loadSettings(namespace: string): Partial<AnswerSettings> {
+  const stored = read<Record<string, unknown>>(storageKeys(namespace).settings) ?? {};
+  const settings: Partial<AnswerSettings> = {};
+  if (typeof stored.maxAttempts === "number") settings.maxAttempts = stored.maxAttempts;
+  if (typeof stored.maxPreviewRows === "number") settings.maxPreviewRows = stored.maxPreviewRows;
+  if (typeof stored.useHistory === "boolean") settings.useHistory = stored.useHistory;
+  return settings;
+}
+
+export function saveSettings(namespace: string, settings: AnswerSettings): void {
+  write(storageKeys(namespace).settings, settings);
 }

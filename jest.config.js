@@ -4,6 +4,8 @@ module.exports = {
   roots: ["<rootDir>/ScamwatchChat"],
   testMatch: ["**/__tests__/**/*.test.ts?(x)"],
   setupFilesAfterEnv: ["<rootDir>/ScamwatchChat/__tests__/setup.ts"],
+  // Rendering Fluent UI in jsdom is slow: a UI test can take 5 s or more on a busy machine.
+  testTimeout: 30_000,
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",

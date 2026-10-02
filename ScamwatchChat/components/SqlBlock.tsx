@@ -1,9 +1,13 @@
-/** A read-only SQL listing with a copy button (st.code in app.py). */
+/**
+ * A read-only code listing with a copy button (st.code in app.py). SQL is syntax
+ * highlighted, as st.code(sql, language="sql") showed it.
+ */
 
 import * as React from "react";
 import { Button, makeStyles, mergeClasses, shorthands, tokens, Tooltip } from "@fluentui/react-components";
 import { Checkmark16Regular, Copy16Regular } from "./icons";
 import { copyText } from "../utils/format";
+import { type SqlTokenKind, tokenizeSql } from "../utils/sql";
 import { useStrings } from "../utils/strings";
 
 const useStyles = makeStyles({
@@ -22,19 +26,39 @@ const useStyles = makeStyles({
     overflowX: "auto",
   },
   copy: { position: "absolute", top: tokens.spacingVerticalXS, right: tokens.spacingHorizontalXS },
+  keyword: { color: tokens.colorPaletteBlueForeground2 },
+  function: { color: tokens.colorPaletteBerryForeground1 },
+  string: { color: tokens.colorPaletteGreenForeground1 },
+  number: { color: tokens.colorPaletteDarkOrangeForeground1 },
+  comment: { color: tokens.colorNeutralForeground3, fontStyle: "italic" },
 });
 
 export interface SqlBlockProps {
   code: string;
-  /** Show the copy button (off for long reference text such as the dictionary viewer). */
+  /** "sql" highlights the code; "text" shows it as is (the dictionary viewer). */
+  language?: "sql" | "text";
+  /** Show the copy button. st.code always had one. */
   copyable?: boolean;
   className?: string;
 }
 
-export function SqlBlock({ code, copyable = true, className }: SqlBlockProps) {
+export function SqlBlock({ code, language = "sql", copyable = true, className }: SqlBlockProps) {
   const styles = useStyles();
   const t = useStrings();
   const [copied, setCopied] = React.useState(false);
+  const highlighted = React.useMemo(() => {
+    if (language !== "sql") {
+      return code;
+    }
+    const classes: Record<Exclude<SqlTokenKind, "plain">, string> = styles;
+    return tokenizeSql(code).map((token, i) =>
+      token.kind === "plain" ? token.text : (
+        <span key={i} className={classes[token.kind]}>
+          {token.text}
+        </span>
+      ),
+    );
+  }, [code, language, styles]);
 
   const onCopy = async () => {
     if (await copyText(code)) {
@@ -46,7 +70,7 @@ export function SqlBlock({ code, copyable = true, className }: SqlBlockProps) {
   return (
     <div className={styles.wrap}>
       <pre className={mergeClasses(styles.pre, className)}>
-        <code>{code}</code>
+        <code>{highlighted}</code>
       </pre>
       {copyable && (
         <Tooltip content={copied ? t("ui_Copied") : t("ui_Copy")} relationship="label">

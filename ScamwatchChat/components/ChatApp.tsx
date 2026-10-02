@@ -27,6 +27,7 @@ import { createTranslator, StringsContext, type Translate } from "../utils/strin
 import { AnsweringSection } from "./AnsweringSection";
 import { ChatTranscript } from "./ChatTranscript";
 import { Composer } from "./Composer";
+import { ConnectionSection } from "./ConnectionSection";
 import { DictionarySection } from "./DictionarySection";
 import { ExampleQuestions } from "./ExampleQuestions";
 import { Header } from "./Header";
@@ -98,7 +99,7 @@ export interface ChatAppProps {
 
 type SchemaState =
   | { status: "loading" }
-  | { status: "ready"; schema: SchemaResponse }
+  | { status: "ready"; schema: SchemaResponse; refreshing?: boolean }
   | { status: "signin"; error?: string | null }
   | { status: "error"; error: string };
 
@@ -139,10 +140,16 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
 
   const [schemaState, setSchemaState] = React.useState<SchemaState>({ status: "loading" });
   const [reloadKey, setReloadKey] = React.useState(0);
+  const schemaApi = React.useRef(api);
 
   React.useEffect(() => {
     const abort = new AbortController();
-    setSchemaState({ status: "loading" });
+    // On Reconnect to the same API, keep showing the conversation until the new schema arrives.
+    const sameApi = schemaApi.current === api;
+    schemaApi.current = api;
+    setSchemaState((current) =>
+      sameApi && current.status === "ready" ? { ...current, refreshing: true } : { status: "loading" },
+    );
     api.getSchema(abort.signal).then(
       (schema) => setSchemaState({ status: "ready", schema }),
       (error: unknown) => {
@@ -158,6 +165,8 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
   }, [api, reloadKey]);
 
   const schema = schemaState.status === "ready" ? schemaState.schema : null;
+  const reconnecting = schemaState.status === "loading" || (schemaState.status === "ready" && Boolean(schemaState.refreshing));
+  const reconnect = React.useCallback(() => setReloadKey((k) => k + 1), []);
   const maxChars = schema?.limits?.maxDictionaryChars ?? DEFAULT_MAX_DICTIONARY_CHARS;
 
   const onSignInRequired = React.useCallback(() => setSchemaState({ status: "signin" }), []);
@@ -222,7 +231,7 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
           </MessageBarBody>
         </MessageBar>
         <Body1>{t("ui_ConnectHelp")}</Body1>
-        <Button onClick={() => setReloadKey((k) => k + 1)}>{t("ui_Retry")}</Button>
+        <Button onClick={reconnect}>{t("ui_Retry")}</Button>
       </div>
     );
   } else {
@@ -273,6 +282,7 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
       </div>
 
       <SettingsDrawer open={settingsOpen} inline={inline} onClose={() => setSettingsChoice(false)}>
+        <ConnectionSection schema={schema} status={schemaState.status} busy={reconnecting} onReconnect={reconnect} />
         {schema && (
           <DictionarySection
             table={schema.table}

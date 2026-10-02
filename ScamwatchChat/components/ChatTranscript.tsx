@@ -1,4 +1,7 @@
-/** The conversation: user and assistant turns, plus the "thinking" row (st.chat_message loop in app.py). */
+/**
+ * The conversation: user and assistant turns, plus the "thinking" row (st.chat_message
+ * loop in app.py). Questions render as markdown, as st.markdown showed them.
+ */
 
 import * as React from "react";
 import { Avatar, Button, makeStyles, mergeClasses, shorthands, Spinner, tokens } from "@fluentui/react-components";
@@ -6,6 +9,7 @@ import { Bot20Regular, Person20Regular, Stop16Regular } from "./icons";
 import type { ChatMessage } from "../types";
 import { useStrings } from "../utils/strings";
 import { AssistantMessage } from "./AssistantMessage";
+import { MarkdownText } from "./MarkdownText";
 
 const useStyles = makeStyles({
   list: { display: "flex", flexDirection: "column", rowGap: tokens.spacingVerticalL },
@@ -18,8 +22,7 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorBrandBackground2,
     color: tokens.colorNeutralForeground1,
-    whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
+    overflowWrap: "anywhere",
   },
   thinking: { display: "flex", alignItems: "center", columnGap: tokens.spacingHorizontalM },
 });
@@ -42,7 +45,9 @@ export function ChatTranscript({ messages, pending, onCancel }: ChatTranscriptPr
             <>
               <Avatar size={28} icon={<Person20Regular />} color="neutral" aria-label={t("ui_You")} />
               <div className={styles.body}>
-                <div className={styles.user}>{message.content}</div>
+                <div className={styles.user}>
+                  <MarkdownText text={message.content} keepLineBreaks />
+                </div>
               </div>
             </>
           ) : (
