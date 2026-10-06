@@ -9,16 +9,28 @@
  *   "month"                     → monthly breakdown (good follow-up)
  *   "everything" / "all rows"   → 50,000+ rows, capped (grid and CSV stress test)
  *   "delete" / "drop"           → blocked write, then a corrected query (failed-attempts tab)
+ *   "impossible"                → every attempt fails, so the agent gives up (failed attempts, no results)
  *   "error"                     → the agent fails outright (inline error)
  *   "nothing"                   → an answer with no SQL
  */
 
-import type { Attempt, ChatApi, ColumnInfo, QueryRequest, QueryResponse, Row, SchemaResponse } from "../types";
+import type {
+  Attempt,
+  ChatApi,
+  ColumnInfo,
+  ConnectionSettings,
+  QueryRequest,
+  QueryResponse,
+  Row,
+  SchemaResponse,
+} from "../types";
 
 const TABLE = "Reporting.ScamWatchReportFiltered";
 const DATABASE = "NASC_ODS";
 const SERVER = "sqlserver.example.com";
 const MODEL = "gpt-4o";
+const OPENAI_ENDPOINT = "https://openai.example.com/";
+const OPENAI_API_VERSION = "2024-12-01-preview";
 const PREVIEW_LIMIT = 20;
 const MAX_RESULT_ROWS = 50_000;
 
@@ -152,13 +164,19 @@ export class MockChatApi implements ChatApi {
     this.delayMs = delayMs;
   }
 
-  async getSchema(signal?: AbortSignal): Promise<SchemaResponse> {
+  /** Connection values are echoed back; a table other than the sample one fails, as a missing table would. */
+  async getSchema(signal?: AbortSignal, connection?: ConnectionSettings): Promise<SchemaResponse> {
     await wait(this.delayMs / 3, signal);
+    if (connection?.table && connection.table.toLowerCase() !== TABLE.toLowerCase()) {
+      throw new Error(`Invalid object name '${connection.table}'. (The mock only has ${TABLE}.)`);
+    }
     return {
       table: TABLE,
-      database: DATABASE,
-      server: SERVER,
-      model: MODEL,
+      database: connection?.database ?? DATABASE,
+      server: connection?.server ?? SERVER,
+      model: connection?.model ?? MODEL,
+      openAiEndpoint: connection?.openAiEndpoint ?? OPENAI_ENDPOINT,
+      openAiApiVersion: connection?.openAiApiVersion ?? OPENAI_API_VERSION,
       columns: COLUMNS,
       sampleRows: SAMPLE_ROWS,
       limits: { maxDictionaryChars: 40_000, maxResultRows: MAX_RESULT_ROWS },
@@ -191,6 +209,24 @@ export class MockChatApi implements ChatApi {
         totalRows: 0,
         truncated: false,
         error: "The question couldn't be answered. RateLimitError: Too many requests to the model deployment (mock).",
+      };
+    }
+    if (q.includes("impossible")) {
+      // What TextToSQLAgent.query() returns when every round's SQL fails.
+      const attempts: Attempt[] = Array.from({ length: request.maxAttempts }, (_, i) => ({
+        query: `SELECT TOP 10 victim_postcode${i ? `_${i + 1}` : ""} FROM ${TABLE}`,
+        success: false,
+        error: `Invalid column name 'victim_postcode${i ? `_${i + 1}` : ""}'.`,
+      }));
+      return {
+        answer: "I couldn't complete the query after multiple attempts.",
+        sql: null,
+        attempts,
+        columnNames: [],
+        rows: null,
+        totalRows: 0,
+        truncated: false,
+        error: null,
       };
     }
     if (q.includes("nothing")) {

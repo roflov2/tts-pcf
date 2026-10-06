@@ -20,8 +20,10 @@ import {
 } from "@fluentui/react-components";
 import { DEFAULT_MAKER_DICTIONARY_NAME } from "../defaults";
 import { ApiError } from "../services/apiClient";
+import { loadConnection, saveConnection } from "../state/storage";
 import { useChat } from "../state/useChat";
-import type { ChatApi, ControlOutputs, SchemaResponse } from "../types";
+import type { ChatApi, ConnectionSettings, ControlOutputs, SchemaResponse } from "../types";
+import { normalizeConnection, sameConnection } from "../utils/connection";
 import { columnsMentioned, DEFAULT_MAX_DICTIONARY_CHARS } from "../utils/dictionary";
 import { createTranslator, StringsContext, type Translate } from "../utils/strings";
 import { AnsweringSection } from "./AnsweringSection";
@@ -67,6 +69,8 @@ const useStyles = makeStyles({
     ...shorthands.borderTop("1px", "solid", tokens.colorNeutralStroke2),
   },
   centered: { display: "flex", flexDirection: "column", rowGap: tokens.spacingVerticalM, alignItems: "flex-start" },
+  checklist: { ...shorthands.margin(0), paddingLeft: "20px" },
+  buttons: { display: "flex", flexWrap: "wrap", columnGap: tokens.spacingHorizontalS, rowGap: tokens.spacingVerticalS },
 });
 
 export interface ChatAppProps {
@@ -83,6 +87,11 @@ export interface ChatAppProps {
   makerDictionary?: string | null;
   makerDictionaryName?: string | null;
   allowDictionaryUpload: boolean;
+  /**
+   * Let users edit the connection in Settings, like app.py's Connection form. The API
+   * must check every value it receives against an allowlist.
+   */
+  allowConnectionChange: boolean;
   /** Keys session storage; give each control instance its own. */
   storageNamespace: string;
   isMock: boolean;
@@ -138,19 +147,27 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
   const [settingsChoice, setSettingsChoice] = React.useState<boolean | null>(null);
   const settingsOpen = settingsChoice ?? inline;
 
+  // The Connection form values the user connected with (app.py's st.session_state.config).
+  const [connection, setConnection] = React.useState<ConnectionSettings | null>(() =>
+    props.allowConnectionChange ? loadConnection(props.storageNamespace) : null,
+  );
+  // Ignored when the app maker turns the form off. Keyed by value so effects only rerun on a real change.
+  const connectionKey = JSON.stringify(props.allowConnectionChange ? connection : null);
+  const activeConnection = React.useMemo<ConnectionSettings | null>(() => JSON.parse(connectionKey), [connectionKey]);
+
   const [schemaState, setSchemaState] = React.useState<SchemaState>({ status: "loading" });
   const [reloadKey, setReloadKey] = React.useState(0);
-  const schemaApi = React.useRef(api);
+  const schemaTarget = React.useRef({ api, connectionKey });
 
   React.useEffect(() => {
     const abort = new AbortController();
-    // On Reconnect to the same API, keep showing the conversation until the new schema arrives.
-    const sameApi = schemaApi.current === api;
-    schemaApi.current = api;
+    // On Reconnect to the same API and connection, keep showing the conversation until the new schema arrives.
+    const sameTarget = schemaTarget.current.api === api && schemaTarget.current.connectionKey === connectionKey;
+    schemaTarget.current = { api, connectionKey };
     setSchemaState((current) =>
-      sameApi && current.status === "ready" ? { ...current, refreshing: true } : { status: "loading" },
+      sameTarget && current.status === "ready" ? { ...current, refreshing: true } : { status: "loading" },
     );
-    api.getSchema(abort.signal).then(
+    api.getSchema(abort.signal, activeConnection ?? undefined).then(
       (schema) => setSchemaState({ status: "ready", schema }),
       (error: unknown) => {
         if (abort.signal.aborted) return;
@@ -162,11 +179,22 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
       },
     );
     return () => abort.abort();
-  }, [api, reloadKey]);
+  }, [api, reloadKey, connectionKey, activeConnection]);
 
   const schema = schemaState.status === "ready" ? schemaState.schema : null;
   const reconnecting = schemaState.status === "loading" || (schemaState.status === "ready" && Boolean(schemaState.refreshing));
   const reconnect = React.useCallback(() => setReloadKey((k) => k + 1), []);
+
+  /** Connect in app.py: keep the new values for the session and read the schema with them. */
+  const connect = (values: ConnectionSettings | null) => {
+    const next = normalizeConnection(values);
+    saveConnection(props.storageNamespace, next);
+    if (sameConnection(next, connection)) {
+      reconnect();
+    } else {
+      setConnection(next);
+    }
+  };
   const maxChars = schema?.limits?.maxDictionaryChars ?? DEFAULT_MAX_DICTIONARY_CHARS;
 
   const onSignInRequired = React.useCallback(() => setSchemaState({ status: "signin" }), []);
@@ -182,6 +210,7 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
     maker,
     allowUpload: props.allowDictionaryUpload,
     maxDictionaryChars: maxChars,
+    connection: activeConnection,
     onOutputs,
     onSignInRequired,
   });
@@ -222,16 +251,39 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
   } else if (schemaState.status === "signin") {
     body = <SignInPrompt redirectUri={props.redirectUri} error={schemaState.error} onSignIn={signIn} />;
   } else if (schemaState.status === "error") {
+    // As app.py: name the table and server when known, then a checklist.
+    const target = activeConnection?.table && activeConnection.server ? activeConnection : null;
     body = (
       <div className={styles.centered}>
         <MessageBar layout="multiline" intent="error">
           <MessageBarBody>
-            <MessageBarTitle>{t("ui_ConnectFailed")}</MessageBarTitle>
+            <MessageBarTitle>
+              {target ? t("ui_ConnectFailedTo", target.table as string, target.server as string) : t("ui_ConnectFailed")}
+            </MessageBarTitle>
             {schemaState.error}
           </MessageBarBody>
         </MessageBar>
         <Body1>{t("ui_ConnectHelp")}</Body1>
-        <Button onClick={reconnect}>{t("ui_Retry")}</Button>
+        <ul className={styles.checklist}>
+          <li>
+            <Body1>{t("ui_ConnectCheckAccount")}</Body1>
+          </li>
+          <li>
+            <Body1>{t("ui_ConnectCheckNetwork")}</Body1>
+          </li>
+          <li>
+            <Body1>{t("ui_ConnectCheckSite")}</Body1>
+          </li>
+        </ul>
+        <Body1>{props.allowConnectionChange ? t("ui_ConnectThenSettings") : t("ui_ConnectThenRetry")}</Body1>
+        <div className={styles.buttons}>
+          <Button onClick={reconnect}>{t("ui_Retry")}</Button>
+          {props.allowConnectionChange && !settingsOpen && (
+            <Button appearance="primary" onClick={() => setSettingsChoice(true)}>
+              {t("ui_ConnectOpenSettings")}
+            </Button>
+          )}
+        </div>
       </div>
     );
   } else {
@@ -282,7 +334,16 @@ function ChatAppBody(props: ChatAppProps & { t: Translate }) {
       </div>
 
       <SettingsDrawer open={settingsOpen} inline={inline} onClose={() => setSettingsChoice(false)}>
-        <ConnectionSection schema={schema} status={schemaState.status} busy={reconnecting} onReconnect={reconnect} />
+        <ConnectionSection
+          schema={schema}
+          status={schemaState.status}
+          busy={reconnecting}
+          onReconnect={reconnect}
+          editable={props.allowConnectionChange}
+          connection={activeConnection}
+          onConnect={connect}
+          onReset={() => connect(null)}
+        />
         {schema && (
           <DictionarySection
             table={schema.table}

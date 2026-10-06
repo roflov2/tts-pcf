@@ -13,7 +13,23 @@ export interface ColumnInfo {
   type: string;
 }
 
-/** GET {apiBaseUrl}/schema */
+/**
+ * The Connection form in app.py (render_connection_settings). Sent to the API only
+ * when the app maker turns on allowConnectionChange; blank fields are left out and
+ * the API uses its own setting. The API must check every value against an allowlist.
+ */
+export interface ConnectionSettings {
+  server?: string;
+  database?: string;
+  /** Schema-qualified, e.g. Reporting.ScamWatchReportFiltered. */
+  table?: string;
+  openAiEndpoint?: string;
+  openAiApiVersion?: string;
+  /** Model deployment name. */
+  model?: string;
+}
+
+/** GET {apiBaseUrl}/schema, with any ConnectionSettings as query parameters. */
 export interface SchemaResponse {
   table: string;
   database: string;
@@ -21,6 +37,10 @@ export interface SchemaResponse {
   server?: string;
   /** Model deployment (deployment_name on the agent). Optional; shown in Settings → Connection. */
   model?: string;
+  /** Azure OpenAI endpoint. Optional; shown in Settings → Connection. */
+  openAiEndpoint?: string;
+  /** Azure OpenAI API version. Optional; shown in Settings → Connection. */
+  openAiApiVersion?: string;
   columns: ColumnInfo[];
   sampleRows: Row[];
   limits?: {
@@ -47,6 +67,8 @@ export interface QueryRequest {
   maxPreviewRows?: number;
   /** Plain-text data dictionary, sent with every question when one is active. */
   dataDictionary?: string;
+  /** The user's Connection form values, when the app lets users change the connection. */
+  connection?: ConnectionSettings;
 }
 
 export interface Attempt {
@@ -126,6 +148,6 @@ export interface ControlOutputs {
 
 /** What the UI needs from the backend. Implemented by apiClient.ts and mockApi.ts. */
 export interface ChatApi {
-  getSchema(signal?: AbortSignal): Promise<SchemaResponse>;
+  getSchema(signal?: AbortSignal, connection?: ConnectionSettings): Promise<SchemaResponse>;
   query(request: QueryRequest, signal?: AbortSignal): Promise<QueryResponse>;
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { columnKinds, filterRows, sortRows } from "../components/ResultsGrid";
+import { columnKinds, filterRows, sortRows } from "../utils/grid";
 import { ApiError } from "../services/apiClient";
 import { compactForStorage, loadSettings, MAX_STORED_RESULT_CHARS, saveSettings, storageKeys } from "../state/storage";
 import { activeDictionary, chatReducer, type ChatState, clampAttempts, clampPreviewRows, errorMessage, toAssistantMessage } from "../state/useChat";

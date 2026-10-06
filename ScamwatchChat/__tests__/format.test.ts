@@ -68,7 +68,7 @@ describe("buildHistory (build_history)", () => {
 });
 
 describe("toCsv", () => {
-  it("writes a BOM, a header and quoted fields where needed", () => {
+  it("writes a BOM, a header and quoted fields where needed, with booleans as pandas writes them", () => {
     const csv = toCsv(
       [
         { name: 'Say "hi"', amount: 1200.5, note: "a,b", empty: null, flag: true },
@@ -77,7 +77,7 @@ describe("toCsv", () => {
       ["name", "amount", "note", "empty", "flag"],
     );
     expect(csv).toBe(
-      '﻿name,amount,note,empty,flag\r\n"Say ""hi""",1200.5,"a,b",,true\r\n"two\nlines",0,,,false\r\n',
+      '﻿name,amount,note,empty,flag\r\n"Say ""hi""",1200.5,"a,b",,True\r\n"two\nlines",0,,,False\r\n',
     );
   });
 

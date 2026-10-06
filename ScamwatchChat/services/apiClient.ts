@@ -1,6 +1,7 @@
 /** HTTP client for the backend that wraps TextToSQLAgent. See types.ts for the contract. */
 
-import type { ChatApi, QueryRequest, QueryResponse, SchemaResponse } from "../types";
+import type { ChatApi, ConnectionSettings, QueryRequest, QueryResponse, SchemaResponse } from "../types";
+import { connectionQuery } from "../utils/connection";
 import { SignInRequiredError, type TokenProvider } from "./auth";
 
 /** Under the ~240 s ingress timeout of common Azure hosts, so the server's own error wins. */
@@ -68,8 +69,8 @@ export class HttpChatApi implements ChatApi {
     this.timeoutMs = timeoutMs;
   }
 
-  getSchema(signal?: AbortSignal): Promise<SchemaResponse> {
-    return this.request<SchemaResponse>("GET", "/schema", undefined, signal);
+  getSchema(signal?: AbortSignal, connection?: ConnectionSettings): Promise<SchemaResponse> {
+    return this.request<SchemaResponse>("GET", "/schema" + connectionQuery(connection), undefined, signal);
   }
 
   query(request: QueryRequest, signal?: AbortSignal): Promise<QueryResponse> {

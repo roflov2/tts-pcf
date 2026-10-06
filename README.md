@@ -12,7 +12,8 @@ download), the SQL and any failed attempts.
 - Works in **canvas** and **model-driven** apps (no `Xrm` or Dataverse calls).
 - **Data dictionary**: users upload a `.txt` file, or the app maker supplies one, and it's sent with every question.
 - **Follow-up questions**: recent questions and the SQL behind each answer are sent as context.
-- Results tables work like Streamlit's `st.dataframe`: sort, search, resize columns, full screen, CSV download. **50,000 rows** scroll smoothly (virtualised).
+- Results tables work like Streamlit's `st.dataframe`: sort, search, select and copy cells, resize, reorder, pin and hide columns, full screen, CSV download. **50,000 rows** scroll smoothly (virtualised).
+- **Connection**: Settings shows the server, database, table, endpoint, API version and model. With `allowConnectionChange` on, users can edit them and select **Connect**, as in Streamlit.
 - **Mock mode** with built-in sample data, so you can try it with no backend.
 - Uses the platform's React 16 and Fluent UI v9, so the bundle is small and it follows the app's theme.
 
@@ -45,7 +46,7 @@ code .                                 # or: antigravity .
 Then, in either path:
 
 ```bash
-npm test          # 77 unit and UI tests, under a minute
+npm test          # 100 unit and UI tests, about a minute
 npm run preview   # open http://localhost:5173: the control with sample data
 ```
 
@@ -65,10 +66,11 @@ Debugging: the launch configs **Debug preview (mock data)** and **Debug in PCF
 harness** open Chrome with breakpoints in the TypeScript source.
 
 The preview also takes URL parameters, handy for screenshots:
-`?width=narrow`, `?theme=dark`, `?dictionary=maker`, `?uploads=off`,
+`?width=narrow`, `?theme=dark`, `?dictionary=maker`, `?uploads=off`, `?connection=edit`,
 `?ask=How%20many%20reports`. In mock mode, these questions show each state:
 "how many…", "most common…", "now by month", "show everything" (50,000 rows),
-"delete old rows" (failed attempts), "cause an error", "nothing".
+"delete old rows" (failed attempts), "an impossible question" (every attempt fails),
+"cause an error", "nothing".
 
 ## Commands
 
@@ -114,6 +116,7 @@ Inputs:
 | `tenantId` | Text | | Empty allows any work account |
 | `redirectUri` | Text | page origin | Must be on the **same origin as the page hosting the control**, and registered as an SPA redirect URI. The sign-in prompt shows the value to register |
 | `useMockApi` | Yes/No | No | Built-in sample data, no backend |
+| `allowConnectionChange` | Yes/No | No | Lets users edit the server, database, table, Azure OpenAI endpoint, API version and model in Settings and select **Connect** (Streamlit's Connection form). Turn it on only if your API checks every value against an allowlist; see the [API contract](docs/API_CONTRACT.md#connection-values-from-users-optional). Off: shown read-only |
 | `title`, `placeholder` | Text | Streamlit's text | |
 | `exampleQuestions` | Multiline | the 3 Streamlit examples | One per line |
 | `showTableOverview` | Yes/No | Yes | Columns, sample rows, dictionary viewer |
@@ -156,11 +159,12 @@ ScamwatchChat/
     ChatTranscript.tsx        user/assistant turns (questions as markdown), thinking row with Stop
     AssistantMessage.tsx      error, markdown answer, data note, Results/SQL/Failed tabs, CSV
     MarkdownText.tsx          markdown rendering shared by answers and questions
-    ResultsGrid.tsx           st.dataframe: virtualised (react-window), sort, search, resize, full screen
+    ResultsGrid.tsx           st.dataframe: virtualised (react-window), sort, search, cell selection and copy,
+                              column menu (sort, autosize, pin, hide), show/hide, drag to reorder, full screen
     SqlBlock.tsx              st.code: SQL highlighting, copy button
     Composer.tsx              question box: Enter sends, Shift+Enter for a new line
     SettingsDrawer.tsx        inline drawer ≥ 900 px wide, overlay below (replaces the Streamlit sidebar)
-    ConnectionSection.tsx     server, database, table, model from /schema; Reconnect
+    ConnectionSection.tsx     the six connection settings from /schema: read-only with Reconnect, or a form with Connect
     DictionarySection.tsx     drop zone / Browse files, file name and size, status, truncation warning, template
     AnsweringSection.tsx      attempts slider, rows the model reads, follow-ups switch, Clear
     SignInPrompt.tsx          interactive sign-in when silent sign-in fails
@@ -176,6 +180,8 @@ ScamwatchChat/
     dictionary.ts             ports of decode_text, prepare_data_dictionary, columns_mentioned, …
     format.ts                 rowLabel, buildHistory, toCsv, downloads, markdown safety helpers
     sql.ts                    T-SQL tokenizer for highlighting
+    grid.ts                   table logic: sort, search, widths, column order/pin/hide, selection, copy as TSV
+    connection.ts             Connection form values: tidy, compare, query string
     strings.ts                UI text defaults + translator (keys mirror the .resx)
   strings/ScamwatchChat.1033.resx   all display text (manifest + UI)
   __tests__/                  Jest tests
@@ -192,9 +198,10 @@ Dictionary: `DictionarySection → readDictionary → useChat.setUploaded → ac
 | Streamlit `app.py` | Here |
 |---|---|
 | `st.title` + caption | `Header` |
-| Sidebar: Connection (`render_connection_settings`) | `ConnectionSection`: shows the server, database, table and model the API reports, with **Reconnect**. Not editable: the API runs SQL under its own identity, so the app maker chooses the backend with `apiBaseUrl` |
+| Sidebar: Connection (`render_connection_settings`): SQL server, database, table (with its hint), Azure OpenAI endpoint, API version, model deployment, **Connect** | `ConnectionSection`. With `allowConnectionChange` on: the same six fields and **Connect**, values trimmed, sent to the API (which must allowlist them) and kept for the session. Off (the default, because the API runs SQL under its own identity): the same six values read-only, with **Reconnect** |
 | Connection: Rows the model reads per result (5–200) | `AnsweringSection` number box, same range and help text, sent per question as `maxPreviewRows` |
-| Connection error page with a checklist | Error message, checklist and **Try again** |
+| `st.cache_resource` agent per connection | The API's job (see the API contract) |
+| Connection error: "Couldn't connect to {table} on {server}", checklist, "update the settings … select Connect" | Same structure: the table and server when known, "To fix this, check that:" with a checklist for the API, then Connect (or **Try again**) |
 | Sidebar: Data dictionary (`render_dictionary_settings`) | `DictionarySection` |
 | `st.file_uploader(type=["txt"])`: drop zone, Browse files, file name and size, remove | Same, in `DictionarySection` |
 | Sidebar: Answering (`render_answering_settings`) | `AnsweringSection` |
@@ -202,14 +209,22 @@ Dictionary: `DictionarySection → readDictionary → useChat.setUploaded → ac
 | `render_examples` | `ExampleQuestions` |
 | `render_answer` | `AssistantMessage` (`answerTabs()` holds the tab rules) |
 | `st.markdown` for questions and answers | `MarkdownText` (`protectSpacedMarkers` keeps `SELECT * FROM` literal, as CommonMark does) |
-| `st.dataframe` / `to_dataframe` / `_arrow_safe` | `ResultsGrid`: sort, search, resize columns, full screen, booleans as checkboxes, nulls as `None` (values arrive JSON-safe from the API) |
+| `st.dataframe` / `to_dataframe` / `_arrow_safe` | `ResultsGrid` (values arrive JSON-safe from the API): sort by header or menu; search; select cells by click, Shift+click, drag, arrow keys, Ctrl+A, and copy with Ctrl+C as tab-separated text; resize, double-click to autosize, drag to reorder, pin and hide columns; show/hide menu; full screen; booleans as checkboxes, nulls as `None` |
 | `st.code(sql, language="sql")`: highlighting and copy | `SqlBlock` (`tokenizeSql`) |
-| `st.download_button` CSV (`utf-8-sig`) | `toCsv` (UTF-8 BOM) + `downloadText` |
+| `st.download_button` CSV (`utf-8-sig`, booleans as `True`/`False`) | `toCsv` (UTF-8 BOM, same booleans) + `downloadText` |
+| Agent gives up ("I couldn't complete the query after multiple attempts.") | Shown as returned, with the Failed attempts tab; the mock's "impossible" question shows it |
 | `st.session_state` (messages, widget values) | `useChat` + `storage.ts` (session storage) |
 | `escape_dollars` | Not needed (no LaTeX); `protectIdentifiers` stops `snake_case` turning italic |
 | `build_history`, `row_label` | `buildHistory`, `rowLabel` |
 | `decode_text`, `columns_mentioned`, `read_dictionary`, `dictionary_template`, `template_file_name` | same names in camelCase in `utils/dictionary.ts` |
 | `prepare_data_dictionary` (agent) | `prepareDataDictionary` |
+
+Deliberate differences:
+
+- **Streamlit's own page chrome** (the ⋮ menu's Rerun, theme picker, Print and Record a screencast; the browser tab's title and 🔎 icon) isn't part of the control. The Power Apps page owns those, and the control follows the app's theme.
+- **Editing the connection is off by default** (`allowConnectionChange`), for the reason in the table above.
+- **Whole numbers in decimal columns** show and download as `1200`, not pandas' `1200.0`, because results arrive as JSON, which doesn't keep that distinction.
+- **The loading message** says "Connecting to the assistant…" rather than "…to Azure SQL…", because the control connects to the API.
 
 ---
 

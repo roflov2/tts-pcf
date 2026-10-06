@@ -72,15 +72,20 @@ function csvField(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
+/** A cell as pandas' to_csv writes it: booleans as True/False, blanks empty. */
+function csvValue(value: CellValue | undefined): string {
+  return typeof value === "boolean" ? (value ? "True" : "False") : cellText(value);
+}
+
 /**
  * A CSV file with a UTF-8 byte order mark, so Excel opens it with the right encoding
- * (the Streamlit app used utf-8-sig for the same reason).
+ * (the Streamlit app used frame.to_csv(...).encode("utf-8-sig") for the same reason).
  */
 export function toCsv(rows: Row[], columnNames: string[]): string {
   const columns = uniqueColumns(columnNames);
   const lines = [columns.map(csvField).join(",")];
   for (const row of rows) {
-    lines.push(columns.map((column) => csvField(cellText(row[column]))).join(","));
+    lines.push(columns.map((column) => csvField(csvValue(row[column]))).join(","));
   }
   return "﻿" + lines.join("\r\n") + "\r\n";
 }
